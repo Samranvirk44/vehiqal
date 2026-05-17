@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', system-ui, sans-serif; }
+}
+
+@layer components {
+  .btn-gold    { @apply bg-gold text-yellow-900 font-bold px-6 py-3 rounded-xl hover:bg-golddark transition-all duration-200 inline-flex items-center gap-2; }
+  .btn-navy    { @apply bg-navy text-white font-bold px-6 py-3 rounded-xl hover:bg-navydark transition-all duration-200 inline-flex items-center gap-2; }
+  .btn-outline { @apply border-2 border-navy text-navy font-bold px-6 py-3 rounded-xl hover:bg-navylight transition-all duration-200 inline-flex items-center gap-2; }
+  .btn-white   { @apply bg-white text-navy font-bold px-6 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 inline-flex items-center gap-2; }
+  .card        { @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300; }
+  .input       { @apply w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent bg-white; }
+  .label       { @apply block text-sm font-semibold text-gray-700 mb-2; }
+  .trusted-badge { @apply inline-flex items-center gap-1.5 bg-goldlight border border-gold text-yellow-800 text-xs font-bold px-3 py-1.5 rounded-full; }
+  .section     { @apply py-20 px-4 max-w-7xl mx-auto; }
+}
+
+/* Headlight flash animation */
+@keyframes hlFlash {
+  0%,40%  { opacity: 1; }
+  43%     { opacity: 0.15; }
+  46%     { opacity: 1; }
+  49%     { opacity: 0.15; }
+  52%     { opacity: 1; }
+  100%    { opacity: 1; }
+}
+@keyframes beamFlash {
+  0%,40%  { opacity: 0.65; }
+  43%     { opacity: 0; }
+  46%     { opacity: 0.65; }
+  49%     { opacity: 0; }
+  52%     { opacity: 0.65; }
+  100%    { opacity: 0.65; }
+}
+@keyframes iqPulse {
+  0%,100% { text-shadow: 0 0 20px rgba(245,166,35,0.35); }
+  50%     { text-shadow: 0 0 50px rgba(245,166,35,0.9), 0 0 100px rgba(245,166,35,0.35); }
+}
+@keyframes logoFloat {
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-10px); }
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(24px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.hl-flash     { animation: hlFlash   2.4s ease-in-out 1s infinite; }
+.beam-flash   { animation: beamFlash 2.4s ease-in-out 1s infinite; opacity: 0.65; }
+.iq-pulse     { animation: iqPulse   2s   ease-in-out infinite; color: #F5A623; }
+.logo-float   { animation: logoFloat 3s   ease-in-out infinite; }
+.fade-up      { animation: fadeUp    0.7s ease both; }
+.fade-up-2    { animation: fadeUp    0.7s ease 0.15s both; }
+.fade-up-3    { animation: fadeUp    0.7s ease 0.3s  both; }

@@ -10,6 +10,7 @@ export default function NotFound() {
           <Link href="/" className="btn-navy">Go home</Link>
           <Link href="/cars" className="btn-outline">Browse cars</Link>
           <a href="tel:+923114642679" className="btn-gold">📞 Call us</a>
+          
         </div>
       </div>
     </div>

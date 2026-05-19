@@ -4,7 +4,14 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { setupRecaptcha, sendOTP, getUserProfile, createUserProfile } from '@/lib/auth'
 import { auth } from '@/lib/firebase'
 import { isAdminEmail, isAdminIdentity, setAdminSession } from '@/lib/admin'
-import { signInWithEmailAndPassword, type ConfirmationResult } from 'firebase/auth'
+import {
+  browserLocalPersistence,
+  browserSessionPersistence,
+  onAuthStateChanged,
+  setPersistence,
+  signInWithEmailAndPassword,
+  type ConfirmationResult,
+} from 'firebase/auth'
 
 const CODES = [{code:'+92',flag:'🇵🇰'},{code:'+61',flag:'🇦🇺'},{code:'+1',flag:'🇺🇸'},{code:'+44',flag:'🇬🇧'}]
 const RESEND_DELAY_MS = 60_000
@@ -110,6 +117,7 @@ export function LoginForm() {
   const [now, setNow] = useState(Date.now())
   const [adminUser, setAdminUser] = useState('')
   const [adminPass, setAdminPass] = useState('')
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
   const [otpStatus, setOtpStatus] = useState('')
@@ -125,6 +133,15 @@ export function LoginForm() {
       window.location.replace(url.toString())
     }
   }, [])
+
+  useEffect(() => {
+    if (adminRequested) return
+    return onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser && step === 'phone' && !loading) {
+        router.replace(redirect || '/dashboard')
+      }
+    })
+  }, [adminRequested, loading, redirect, router, step])
 
   useEffect(() => {
     if (step !== 'otp' || resendAvailableAt <= Date.now()) return
@@ -154,6 +171,7 @@ export function LoginForm() {
       setOtp('')
       setConf(null)
       resetRecaptcha()
+      await setPersistence(auth, keepLoggedIn ? browserLocalPersistence : browserSessionPersistence)
       rRef.current = setupRecaptcha('recaptcha-container')
       setOtpStatus(`Complete the reCAPTCHA if it appears. Sending code to ${full}...`)
       setConf(await sendOTP(full, rRef.current))
@@ -187,6 +205,7 @@ export function LoginForm() {
 
       if (firebaseEmail) {
         try {
+          await setPersistence(auth, keepLoggedIn ? browserLocalPersistence : browserSessionPersistence)
           const credential = await withTimeout(signInWithEmailAndPassword(auth, firebaseEmail, password), username.includes('@') ? 10000 : 3000)
           if (!isAdminEmail(credential.user.email)) {
             setError('This email is not allowed as admin.')
@@ -247,22 +266,27 @@ export function LoginForm() {
     setLoading(true);setError('')
     try {
       const r = await conf.confirm(otp)
-      const p = await getUserProfile(r.user.uid)
-      const savedPhone = r.user.phoneNumber || sentPhone || full
-      const savedName = userFlow === 'register'
-        ? name.trim()
-        : p?.name ?? r.user.displayName ?? ''
-      const profileUpdate: any = {
-        phone:savedPhone,
-        role:p?.role ?? 'buy',
-        isBuyer:p?.isBuyer ?? true,
-        isSeller:p?.isSeller ?? false,
-        savedCars:p?.savedCars ?? [],
+      try {
+        const p = await getUserProfile(r.user.uid)
+        const savedPhone = r.user.phoneNumber || sentPhone || full
+        const savedName = userFlow === 'register'
+          ? name.trim()
+          : p?.name ?? r.user.displayName ?? ''
+        const profileUpdate: any = {
+          phone:savedPhone,
+          role:p?.role ?? 'buy',
+          isBuyer:p?.isBuyer ?? true,
+          isSeller:p?.isSeller ?? false,
+          savedCars:p?.savedCars ?? [],
+        }
+        if (savedName) profileUpdate.name = savedName
+        await createUserProfile(r.user.uid, profileUpdate)
+      } catch (profileError) {
+        console.error('profile save after login failed:', profileError)
       }
-      if (savedName) profileUpdate.name = savedName
-      await createUserProfile(r.user.uid, profileUpdate)
       if (isAdminIdentity(r.user)) setAdminSession()
-      router.replace(redirect)
+      await r.user.getIdToken(true).catch(() => null)
+      window.location.assign(redirect || '/dashboard')
     } catch(error:any){
       console.error('verifyOtp error:', error)
       setError(error?.code?.startsWith('auth/') ? 'Incorrect code. Try again.' : 'Signed in, but could not save your phone number. Please try again.')
@@ -301,6 +325,15 @@ export function LoginForm() {
             <input name="adminPass" type="password" value={adminPass} onChange={e=>setAdminPass(e.target.value)} placeholder="Password" className="input" autoComplete="current-password"/>
           </div>
           {error&&<p className="text-red-500 text-sm">{error}</p>}
+          <label className="flex cursor-pointer items-center gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600">
+            <input
+              type="checkbox"
+              checked={keepLoggedIn}
+              onChange={e=>setKeepLoggedIn(e.target.checked)}
+              className="accent-navy"
+            />
+            Keep me logged in on this device
+          </label>
           <button type="submit" disabled={loading} className="btn-navy w-full justify-center disabled:opacity-60">{loading?'Opening…':'Open admin dashboard'}</button>
           <button
             type="button"
@@ -347,6 +380,15 @@ export function LoginForm() {
           </div>
           {error&&<p className="text-red-500 text-sm">{error}</p>}
           {!error&&otpStatus&&<p className="text-gray-500 text-sm">{otpStatus}</p>}
+          <label className="flex cursor-pointer items-center gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600">
+            <input
+              type="checkbox"
+              checked={keepLoggedIn}
+              onChange={e=>setKeepLoggedIn(e.target.checked)}
+              className="accent-navy"
+            />
+            Keep me logged in on this device
+          </label>
           <button type="submit" disabled={loading} className="btn-navy w-full justify-center disabled:opacity-60">{loading?'Sending…':userFlow==='register'?'Send registration code':'Send verification code'}</button>
         </form>
       )}

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CITIES, MAKES } from '@/lib/cars'
+import { CITIES, MAKES, getCarColourOption } from '@/lib/cars'
 
 export function HeroSearch() {
   const router = useRouter()
@@ -66,24 +66,36 @@ export function LatestCars() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {cars.map((car: any) => (
-        <a key={car.id} href={`/cars/${car.id}`}
-          className="card group block bg-white">
-          <div className="relative h-48 bg-gray-100 overflow-hidden">
-            {car.images?.[0]
-              ? <img src={car.images[0]} alt={`${car.make} ${car.model}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-              : <div className="w-full h-full flex items-center justify-center text-5xl">🚗</div>
-            }
-            {car.isTrusted && (
-              <span className="absolute top-3 right-3 trusted-badge">★ Verified</span>
-            )}
-          </div>
-          <div className="p-5">
-            <h3 className="font-bold text-gray-900 text-lg">{car.make} {car.model} {car.year}</h3>
-            <p className="text-navy font-black text-xl mt-1">PKR {((car.price||0)/100000).toFixed(0)} lac</p>
-            <p className="text-gray-400 text-sm mt-1">📍 {car.city} · {Number(car.mileage||0).toLocaleString()} km</p>
-          </div>
-        </a>
+        <LatestCarLink key={car.id} car={car}/>
       ))}
     </div>
+  )
+}
+
+function LatestCarLink({ car }: { car: any }) {
+  const colourOption = getCarColourOption(car.colour)
+  return (
+    <a href={`/cars/${car.id}`} className="card group block bg-white">
+      <div className="relative h-48 bg-gray-100 overflow-hidden">
+        {car.images?.[0]
+          ? <img src={car.images[0]} alt={`${car.make} ${car.model}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+          : <div className="w-full h-full flex items-center justify-center text-5xl">🚗</div>
+        }
+        {car.isTrusted && (
+          <span className="absolute top-3 right-3 trusted-badge">✓ Inspected</span>
+        )}
+      </div>
+      <div className="p-5">
+        <h3 className="font-bold text-gray-900 text-lg">{car.make} {car.model} {car.year}</h3>
+        <p className="text-navy font-black text-xl mt-1">PKR {((car.price||0)/100000).toFixed(0)} lac</p>
+        <p className="text-gray-400 text-sm mt-1">📍 {car.city} · {Number(car.mileage||0).toLocaleString()} km</p>
+        {colourOption&&(
+          <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500">
+            <span className="h-3.5 w-3.5 rounded-full border border-gray-300" style={{backgroundColor: colourOption.hex}}/>
+            {colourOption.name}
+          </p>
+        )}
+      </div>
+    </a>
   )
 }

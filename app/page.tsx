@@ -5,7 +5,7 @@ import { VehiqalIcon, VehiqalWordmark } from '@/components/VehiqalLogo'
 
 export const metadata: Metadata = {
   title: 'Vehiqal — We take your Headache. Payment & Car Guarantee.',
-  description: 'Buy and sell verified used cars in Pakistan. We take full responsibility for payment and car deal. 300-point inspection. Win-win for buyer and seller. Call 0311 4642679.',
+  description: 'Buy and sell inspected used cars in Pakistan. We take full responsibility for inspected car deals. 300-point inspection. Win-win for buyer and seller. Call 0311 4642679.',
 }
 export const revalidate = 300
 
@@ -137,7 +137,7 @@ export default function HomePage() {
                 Buying or selling a car in Pakistan has always been stressful. Hidden faults, payment risks, strangers at your door.
               </p>
               <p className="text-gray-700 text-lg leading-relaxed font-medium mb-8">
-                We built Vehiqal to take all of that off your plate — completely. From the first inspection to the final payment, <strong>we are responsible for everything.</strong>
+                We built Vehiqal to take all of that off your plate on inspected cars. From the first inspection to the final payment, <strong>we are responsible for inspected car deals.</strong>
               </p>
               <div className="bg-gold/10 border-l-4 border-gold rounded-r-xl px-5 py-4">
                 <p className="text-navy font-black text-xl">Payment &amp; Car Guarantee</p>
@@ -148,7 +148,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 gap-4">
               {[
                 { icon:'💰', title:'We own the payment', color:'border-navy', bg:'bg-navylight',
-                  desc:'All money flows through Vehiqal. We are fully responsible for every transaction. Buyers pay safely, sellers receive securely — no direct cash exchange ever.' },
+                  desc:'For inspected cars, money flows through Vehiqal. We are fully responsible for the inspected-car transaction. Buyers pay safely, sellers receive securely — no direct cash exchange ever.' },
                 { icon:'🚗', title:'We own the car deal', color:'border-gold', bg:'bg-goldlight',
                   desc:'We manage inspection, verification, bidding, and handover. You focus on getting the best price — we handle the entire process from start to finish.' },
                 { icon:'🤝', title:'Win-win for everyone', color:'border-green', bg:'bg-greenlight',
@@ -173,7 +173,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-goldlight to-[#FFF9EE] py-20 px-4 border-y border-gold/20">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <div className="trusted-badge text-sm px-4 py-2 mb-5">★ Trusted Verified</div>
+            <div className="trusted-badge text-sm px-4 py-2 mb-5">✓ Inspected by Vehiqal</div>
             <h2 className="text-4xl md:text-5xl font-black text-navy mb-4">
               We inspect every car.<br />
               <span className="text-gold">So you don&apos;t have to.</span>

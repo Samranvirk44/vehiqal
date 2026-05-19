@@ -21,6 +21,14 @@ const CAR_ST: Record<string,string> = {
   removed: 'bg-gray-100 text-gray-500 border border-gray-200',
 }
 
+const VERIFICATION_ST: Record<string,string> = {
+  none: 'bg-gray-50 text-gray-500 border border-gray-200',
+  requested: 'bg-goldlight text-yellow-800 border border-gold/40',
+  inspecting: 'bg-blue-50 text-navy border border-blue-200',
+  verified: 'bg-greenlight text-green border border-green/30',
+  rejected: 'bg-red-50 text-red-600 border border-red-200',
+}
+
 function titleCase(value?: string) {
   if (!value) return 'Active'
   return value.charAt(0).toUpperCase() + value.slice(1)
@@ -38,6 +46,21 @@ function bidStatusLabel(bid: Bid) {
     return 'Rejected'
   }
   return 'Pending'
+}
+
+function verificationLabel(car: Car) {
+  if (car.isTrusted || car.verificationStatus === 'verified') return 'Inspected'
+  if (car.verificationStatus === 'requested') return 'Verification requested'
+  if (car.verificationStatus === 'inspecting') return 'Inspection in progress'
+  if (car.verificationStatus === 'rejected') return 'Verification rejected'
+  return 'Not inspected'
+}
+
+function firstText(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return ''
 }
 
 export function DashboardClient() {
@@ -75,6 +98,20 @@ export function DashboardClient() {
   const handleBid = async (id: string, status: 'accepted'|'rejected') => {
     await updateDoc(doc(db,'bids',id),{status, decisionBy: 'seller', decidedAt: serverTimestamp(), updatedAt: serverTimestamp()})
     setSBids(p => p.map(b => b.id===id?{...b,status,decisionBy:'seller'}:b))
+  }
+
+  const requestVerification = async (car: Car) => {
+    try {
+      await updateDoc(doc(db,'cars',car.id),{
+        verificationStatus:'requested',
+        verificationRequestedAt:serverTimestamp(),
+        updatedAt:serverTimestamp(),
+      })
+      setListings(current => current.map(item => item.id === car.id ? { ...item, verificationStatus:'requested' } : item))
+    } catch (error) {
+      console.error('Verification request error:', error)
+      setLoadError('Could not request inspection. Please refresh and try again.')
+    }
   }
 
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-navy border-t-transparent rounded-full"/></div>
@@ -130,11 +167,23 @@ export function DashboardClient() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-gray-900">{car.make} {car.model} {car.year}</p>
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${CAR_ST[car.status || 'active'] ?? CAR_ST.active}`}>{titleCase(car.status)}</span>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${VERIFICATION_ST[car.isTrusted ? 'verified' : car.verificationStatus || 'none'] ?? VERIFICATION_ST.none}`}>{verificationLabel(car)}</span>
                   </div>
                   <p className="text-navy font-black">{formatPrice(car.price)}</p>
                   <p className="text-gray-400 text-xs">{car.city}</p>
                 </div>
-                <Link href={`/cars/${car.id}`} className="text-navy font-bold text-sm hover:underline">View →</Link>
+                <div className="flex flex-col items-end gap-2">
+                  {!car.isTrusted && car.status !== 'sold' && car.status !== 'removed' && !['requested','inspecting'].includes(String(car.verificationStatus)) && (
+                    <button
+                      type="button"
+                      onClick={()=>requestVerification(car)}
+                      className="rounded-xl border border-green/30 px-3 py-2 text-xs font-black text-green hover:bg-greenlight"
+                    >
+                      Request inspection
+                    </button>
+                  )}
+                  <Link href={`/cars/${car.id}`} className="text-navy font-bold text-sm hover:underline">View →</Link>
+                </div>
               </div>
             ))
           }
@@ -175,6 +224,14 @@ export function DashboardClient() {
                   <div><p className="font-bold text-gray-900">{b.carTitle}</p><p className="text-navy font-black text-lg">{formatPrice(b.amount)}</p></div>
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${ST[b.status]??ST.pending}`}>{bidStatusLabel(b)}</span>
                 </div>
+                <div className="mt-4 rounded-xl bg-navylight p-3 text-sm">
+                  <p className="font-black text-navy">Seller contact</p>
+                  <p className="text-gray-600">
+                    {firstText(b.sellerName, 'Seller')}
+                    {b.sellerPhone ? <> · <a href={`tel:${b.sellerPhone}`} className="font-bold text-navy hover:underline">{b.sellerPhone}</a></> : <span className="text-gray-400"> · Phone not saved</span>}
+                  </p>
+                  {b.sellerPhone && <a href={`https://wa.me/${b.sellerPhone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex text-xs font-black text-green hover:underline">WhatsApp seller</a>}
+                </div>
               </div>
             ))
           }
@@ -190,6 +247,14 @@ export function DashboardClient() {
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div><p className="font-bold text-gray-900">{b.carTitle}</p><p className="text-gray-500 text-sm">From: {b.buyerName}</p><p className="text-navy font-black text-lg">{formatPrice(b.amount)}</p></div>
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${ST[b.status]??ST.pending}`}>{bidStatusLabel(b)}</span>
+                </div>
+                <div className="mb-3 rounded-xl bg-navylight p-3 text-sm">
+                  <p className="font-black text-navy">Buyer contact</p>
+                  <p className="text-gray-600">
+                    {firstText(b.buyerName, 'Buyer')}
+                    {b.buyerPhone ? <> · <a href={`tel:${b.buyerPhone}`} className="font-bold text-navy hover:underline">{b.buyerPhone}</a></> : <span className="text-gray-400"> · Phone not saved</span>}
+                  </p>
+                  {b.buyerPhone && <a href={`https://wa.me/${b.buyerPhone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex text-xs font-black text-green hover:underline">WhatsApp buyer</a>}
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-3">
                   <button

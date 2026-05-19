@@ -43,14 +43,16 @@ export function CarsClient({ initialCity, initialMake, initialTrusted }: Props) 
     router.push(`/cars?${p.toString()}`)
   }
 
-  const title = `${trusted ? '★ Verified ' : ''}${make !== 'All' ? make + ' ' : ''}Cars${city !== 'All' ? ` in ${city}` : ' for Sale in Pakistan'}`
+  const title = `${trusted ? 'Inspected ' : ''}${make !== 'All' ? make + ' ' : ''}Cars${city !== 'All' ? ` in ${city}` : ' for Sale in Pakistan'}`
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
-      <div className="mb-8">
+      <div className="mb-8 rounded-3xl bg-navylight p-6 md:p-8">
+        <div className="trusted-badge mb-4">✓ Inspected cars appear first</div>
         <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-500">
+        <p className="text-gray-500 max-w-2xl">
           {loading ? 'Loading listings…' : `${cars.length} listing${cars.length !== 1 ? 's' : ''} found`}
+          {' '}Verified cars are marked as Inspected and handled through Vehiqal contact.
         </p>
       </div>
 
@@ -71,7 +73,7 @@ export function CarsClient({ initialCity, initialMake, initialTrusted }: Props) 
             type="checkbox" checked={trusted}
             onChange={e => setTrusted(e.target.checked)}
             className="accent-gold"/>
-          <span className="text-sm font-semibold text-gray-700">★ Verified only</span>
+          <span className="text-sm font-semibold text-gray-700">✓ Inspected only</span>
         </label>
         <button onClick={handleApply} className="btn-navy text-sm !px-6 !py-2.5">Apply</button>
         <button onClick={() => { setCity('All'); setMake('All'); setTrusted(false); router.push('/cars') }}

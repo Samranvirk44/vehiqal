@@ -6,7 +6,19 @@ import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { clearAdminSession, hasAdminSession, isAdminIdentity, setAdminSession } from '@/lib/admin'
 import { getUserProfiles, onAuthChange } from '@/lib/auth'
 import { db } from '@/lib/firebase'
-import { getAllBidsForAdmin, getAllCars, formatPrice, type Bid, type BidStatus, type Car, type CarStatus } from '@/lib/cars'
+import {
+  INSPECTION_SECTIONS,
+  calculateInspectionScore,
+  getAllBidsForAdmin,
+  getAllCars,
+  formatPrice,
+  type Bid,
+  type BidStatus,
+  type Car,
+  type CarStatus,
+  type InspectionSectionResult,
+  type VerificationStatus,
+} from '@/lib/cars'
 import type { User } from 'firebase/auth'
 
 const ST: Record<string,string> = {
@@ -19,6 +31,22 @@ const CAR_ST: Record<string,string> = {
   active: 'bg-greenlight text-green border border-green/30',
   sold: 'bg-navy text-white border border-navy',
   removed: 'bg-gray-100 text-gray-500 border border-gray-200',
+}
+
+const VERIFICATION_ST: Record<string,string> = {
+  none: 'bg-gray-50 text-gray-500 border border-gray-200',
+  requested: 'bg-goldlight text-yellow-800 border border-gold/40',
+  inspecting: 'bg-blue-50 text-navy border border-blue-200',
+  verified: 'bg-greenlight text-green border border-green/30',
+  rejected: 'bg-red-50 text-red-600 border border-red-200',
+}
+
+type InspectionDraftSection = {
+  id: string
+  title: string
+  points: number
+  score: string
+  notes: string
 }
 
 function firstText(...values: unknown[]) {
@@ -47,6 +75,78 @@ function bidStatusLabel(bid: Bid) {
   return 'Pending'
 }
 
+function verificationLabel(car: Car) {
+  if (car.isTrusted || car.verificationStatus === 'verified') return 'Inspected'
+  if (car.verificationStatus === 'requested') return 'Verification requested'
+  if (car.verificationStatus === 'inspecting') return 'Inspection in progress'
+  if (car.verificationStatus === 'rejected') return 'Verification rejected'
+  return 'Not inspected'
+}
+
+function verificationUpdate(status: VerificationStatus) {
+  const base: Record<string, any> = {
+    verificationStatus: status,
+    updatedAt: serverTimestamp(),
+  }
+  if (status === 'requested') {
+    return { ...base, isTrusted: false, verificationRequestedAt: serverTimestamp() }
+  }
+  if (status === 'inspecting') {
+    return { ...base, isTrusted: false, inspectionStartedAt: serverTimestamp() }
+  }
+  if (status === 'verified') {
+    return { ...base, isTrusted: true, verifiedAt: serverTimestamp(), verifiedBy: 'admin' }
+  }
+  if (status === 'rejected') {
+    return { ...base, isTrusted: false, overallScore: null, inspectionReport: null, verificationRejectedAt: serverTimestamp() }
+  }
+  return { ...base, isTrusted: false, overallScore: null, inspectionReport: null }
+}
+
+function buildInspectionDraft(car: Car): InspectionDraftSection[] {
+  const savedSections = car.inspectionReport?.sections ?? []
+  return INSPECTION_SECTIONS.map(section => {
+    const saved = savedSections.find(item => item.id === section.id || item.title === section.title)
+    const savedScore = typeof saved?.score === 'number' && Number.isFinite(saved.score) ? String(saved.score) : ''
+    return {
+      id: section.id,
+      title: section.title,
+      points: section.points,
+      score: savedScore,
+      notes: saved?.notes ?? '',
+    }
+  })
+}
+
+function draftToReportSections(draft: InspectionDraftSection[]): InspectionSectionResult[] {
+  const totalPoints = INSPECTION_SECTIONS.reduce((sum, section) => sum + section.points, 0)
+  return draft.map(section => {
+    const score = section.score === '' ? null : Number(section.score)
+    return {
+      id: section.id,
+      title: section.title,
+      points: section.points,
+      score,
+      weightedScore: score === null ? 0 : Math.round(((score * section.points) / totalPoints) * 100) / 100,
+      notes: section.notes.trim(),
+    }
+  })
+}
+
+function draftOverallScore(draft: InspectionDraftSection[]) {
+  return calculateInspectionScore(draft.map(section => ({
+    points: section.points,
+    score: section.score === '' ? null : Number(section.score),
+  })))
+}
+
+function draftComplete(draft: InspectionDraftSection[]) {
+  return draft.every(section => {
+    const score = Number(section.score)
+    return Number.isFinite(score) && score >= 1 && score <= 10
+  })
+}
+
 export function AdminDashboardClient() {
   const router = useRouter()
   const [cars, setCars] = useState<Car[]>([])
@@ -54,11 +154,13 @@ export function AdminDashboardClient() {
   const [profiles, setProfiles] = useState<Record<string, any>>({})
   const [currentUser, setCurrentUser] = useState<User|null>(null)
   const [authChecked, setAuthChecked] = useState(false)
-  const [tab, setTab] = useState<'cars'|'pending'|'accepted'|'rejected'|'sold'>('cars')
+  const [tab, setTab] = useState<'cars'|'verified'|'pending'|'accepted'|'rejected'|'sold'>('cars')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [updatingBidId, setUpdatingBidId] = useState('')
   const [updatingCarId, setUpdatingCarId] = useState('')
+  const [activeInspectionCarId, setActiveInspectionCarId] = useState('')
+  const [inspectionDrafts, setInspectionDrafts] = useState<Record<string, InspectionDraftSection[]>>({})
 
   useEffect(() => {
     return onAuthChange((u) => {
@@ -161,6 +263,7 @@ export function AdminDashboardClient() {
   const accepted = bids.filter(bid => bid.status === 'accepted')
   const rejected = bids.filter(bid => bid.status === 'rejected')
   const soldCars = cars.filter(car => car.status === 'sold')
+  const verificationRequests = cars.filter(car => ['requested','inspecting'].includes(String(car.verificationStatus)) && !car.isTrusted)
   const listedUserCount = new Set(cars.map(car => car.sellerId).filter(Boolean)).size
   const bidderUserCount = new Set(bids.map(bid => bid.buyerId).filter(Boolean)).size
 
@@ -232,6 +335,190 @@ export function AdminDashboardClient() {
     }
   }
 
+  const setCarVerification = async (id: string, verificationStatus: VerificationStatus) => {
+    setUpdatingCarId(id)
+    setError('')
+    try {
+      const updates = verificationUpdate(verificationStatus)
+      if (isAdminIdentity(currentUser)) {
+        await updateDoc(doc(db, 'cars', id), updates)
+        setCars(current => current.map(car => car.id === id ? {
+          ...car,
+          verificationStatus,
+          isTrusted: verificationStatus === 'verified',
+          overallScore: ['none','rejected'].includes(verificationStatus) ? undefined : car.overallScore,
+          inspectionReport: ['none','rejected'].includes(verificationStatus) ? undefined : car.inspectionReport,
+        } : car))
+        return
+      }
+
+      const response = await fetch(`/api/admin/cars/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ verificationStatus }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (response.status === 401) {
+        clearAdminSession()
+        router.replace('/login?admin=true')
+        return
+      }
+      if (!response.ok) {
+        setError(`${result.error || 'Could not update verification.'} Sign in with the admin email or admin phone, or add Firebase Admin credentials.`)
+        return
+      }
+      setCars(current => current.map(car => car.id === id ? {
+        ...car,
+        verificationStatus,
+        isTrusted: verificationStatus === 'verified',
+        overallScore: ['none','rejected'].includes(verificationStatus) ? undefined : car.overallScore,
+        inspectionReport: ['none','rejected'].includes(verificationStatus) ? undefined : car.inspectionReport,
+      } : car))
+    } catch (updateError) {
+      console.error('Admin verification update error:', updateError)
+      setError('Could not update verification. Please try again.')
+    } finally {
+      setUpdatingCarId('')
+    }
+  }
+
+  const setInspectionDraftSection = (car: Car, index: number, patch: Partial<InspectionDraftSection>) => {
+    setInspectionDrafts(current => {
+      const draft = current[car.id] ?? buildInspectionDraft(car)
+      return {
+        ...current,
+        [car.id]: draft.map((section, sectionIndex) => sectionIndex === index ? { ...section, ...patch } : section),
+      }
+    })
+  }
+
+  const startInspection = async (car: Car) => {
+    setInspectionDrafts(current => current[car.id] ? current : { ...current, [car.id]: buildInspectionDraft(car) })
+    setActiveInspectionCarId(car.id)
+    if (car.verificationStatus !== 'inspecting') {
+      await setCarVerification(car.id, 'inspecting')
+    }
+  }
+
+  const saveInspectionDraft = async (car: Car) => {
+    const draft = inspectionDrafts[car.id] ?? buildInspectionDraft(car)
+    const sections = draftToReportSections(draft)
+    const hasScore = sections.some(section => section.score !== null)
+    const overallScore = hasScore ? draftOverallScore(draft) : null
+    const report = {
+      status: 'in_progress' as const,
+      version: 'yourcar-300-point-v1',
+      totalPoints: INSPECTION_SECTIONS.reduce((sum, section) => sum + section.points, 0),
+      overallScore,
+      sections,
+      inspectedBy: currentUser?.email || currentUser?.phoneNumber || 'admin',
+    }
+    setUpdatingCarId(car.id)
+    setError('')
+    try {
+      if (isAdminIdentity(currentUser)) {
+        await updateDoc(doc(db, 'cars', car.id), {
+          verificationStatus: 'inspecting',
+          isTrusted: false,
+          overallScore,
+          inspectionReport: { ...report, updatedAt: serverTimestamp() },
+          updatedAt: serverTimestamp(),
+        })
+      } else {
+        const response = await fetch(`/api/admin/cars/${car.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ verificationStatus: 'inspecting', overallScore, inspectionReport: report }),
+        })
+        const result = await response.json().catch(() => ({}))
+        if (response.status === 401) {
+          clearAdminSession()
+          router.replace('/login?admin=true')
+          return
+        }
+        if (!response.ok) {
+          setError(`${result.error || 'Could not save inspection draft.'} Sign in with the admin email or admin phone, or add Firebase Admin credentials.`)
+          return
+        }
+      }
+      setCars(current => current.map(item => item.id === car.id ? {
+        ...item,
+        verificationStatus: 'inspecting',
+        isTrusted: false,
+        overallScore: overallScore ?? undefined,
+        inspectionReport: { ...report, updatedAt: new Date().toISOString() },
+      } : item))
+    } catch (saveError) {
+      console.error('Admin inspection draft error:', saveError)
+      setError('Could not save inspection draft. Please try again.')
+    } finally {
+      setUpdatingCarId('')
+    }
+  }
+
+  const completeInspection = async (car: Car) => {
+    const draft = inspectionDrafts[car.id] ?? buildInspectionDraft(car)
+    if (!draftComplete(draft)) {
+      setError('Enter a score from 1 to 10 for every inspection section before completing.')
+      return
+    }
+    const sections = draftToReportSections(draft)
+    const overallScore = draftOverallScore(draft)
+    const report = {
+      status: 'completed' as const,
+      version: 'yourcar-300-point-v1',
+      totalPoints: INSPECTION_SECTIONS.reduce((sum, section) => sum + section.points, 0),
+      overallScore,
+      sections,
+      inspectedBy: currentUser?.email || currentUser?.phoneNumber || 'admin',
+    }
+    setUpdatingCarId(car.id)
+    setError('')
+    try {
+      if (isAdminIdentity(currentUser)) {
+        await updateDoc(doc(db, 'cars', car.id), {
+          verificationStatus: 'verified',
+          isTrusted: true,
+          overallScore,
+          inspectionReport: { ...report, completedAt: serverTimestamp(), updatedAt: serverTimestamp() },
+          verifiedAt: serverTimestamp(),
+          verifiedBy: 'admin',
+          updatedAt: serverTimestamp(),
+        })
+      } else {
+        const response = await fetch(`/api/admin/cars/${car.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ verificationStatus: 'verified', overallScore, inspectionReport: report }),
+        })
+        const result = await response.json().catch(() => ({}))
+        if (response.status === 401) {
+          clearAdminSession()
+          router.replace('/login?admin=true')
+          return
+        }
+        if (!response.ok) {
+          setError(`${result.error || 'Could not complete inspection.'} Sign in with the admin email or admin phone, or add Firebase Admin credentials.`)
+          return
+        }
+      }
+      const completedAt = new Date().toISOString()
+      setCars(current => current.map(item => item.id === car.id ? {
+        ...item,
+        verificationStatus: 'verified',
+        isTrusted: true,
+        overallScore,
+        inspectionReport: { ...report, completedAt, updatedAt: completedAt },
+      } : item))
+      setActiveInspectionCarId('')
+    } catch (completeError) {
+      console.error('Admin inspection complete error:', completeError)
+      setError('Could not complete inspection. Please try again.')
+    } finally {
+      setUpdatingCarId('')
+    }
+  }
+
   const logout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' }).catch(() => null)
     clearAdminSession()
@@ -242,6 +529,7 @@ export function AdminDashboardClient() {
 
   const tabs = [
     { k:'cars', l:'All cars', n:cars.length },
+    { k:'verified', l:'Verified requests', n:verificationRequests.length },
     { k:'pending', l:'Pending bids', n:pending.length },
     { k:'accepted', l:'Accepted bids', n:accepted.length },
     { k:'rejected', l:'Rejected bids', n:rejected.length },
@@ -249,7 +537,7 @@ export function AdminDashboardClient() {
   ] as const
 
   const visibleBids = tab === 'pending' ? pending : tab === 'accepted' ? accepted : tab === 'rejected' ? rejected : []
-  const visibleCars = tab === 'sold' ? soldCars : cars
+  const visibleCars = tab === 'sold' ? soldCars : tab === 'verified' ? verificationRequests : cars
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
@@ -273,7 +561,7 @@ export function AdminDashboardClient() {
 
       {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div>}
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         {tabs.map(item => (
           <button
             key={item.k}
@@ -286,67 +574,117 @@ export function AdminDashboardClient() {
         ))}
       </div>
 
-      {tab === 'cars' || tab === 'sold' ? (
+      {tab === 'cars' || tab === 'sold' || tab === 'verified' ? (
         <div className="space-y-4">
-          {visibleCars.length === 0 ? <Empty text={tab === 'sold' ? 'No sold cars yet' : 'No cars listed yet'} /> : visibleCars.map(car => {
+          {visibleCars.length === 0 ? <Empty text={tab === 'sold' ? 'No sold cars yet' : tab === 'verified' ? 'No verified requests yet' : 'No cars listed yet'} /> : visibleCars.map(car => {
             const seller = profiles[car.sellerId]
             const sellerName = firstText(seller?.name, car.sellerName, car.sellerId)
             const sellerPhone = firstText(seller?.phone, car.sellerPhone)
+            const inspectionDraft = inspectionDrafts[car.id] ?? buildInspectionDraft(car)
+            const inspectionOpen = activeInspectionCarId === car.id
+            const canInspect = ['requested','inspecting'].includes(String(car.verificationStatus)) && !car.isTrusted
             return (
-              <div key={car.id} className="card p-4 flex items-center gap-4">
-                <div className="w-20 h-16 rounded-xl bg-navylight flex items-center justify-center text-2xl flex-shrink-0">🚗</div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-bold text-gray-900">{car.make} {car.model} {car.year}</p>
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${CAR_ST[car.status || 'active'] ?? CAR_ST.active}`}>{statusLabel(car.status)}</span>
+              <div key={car.id} className="card p-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                  <div className="w-20 h-16 rounded-xl bg-navylight flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                    {car.images?.[0] ? <img src={car.images[0]} alt="" className="h-full w-full object-cover"/> : '🚗'}
                   </div>
-                  <p className="text-navy font-black">{formatPrice(car.price)}</p>
-                  <p className="text-gray-400 text-xs">{car.city} · Seller: {sellerName}</p>
-                  <p className="text-gray-600 text-sm font-semibold">
-                    Seller phone:{' '}
-                    {sellerPhone ? <a href={`tel:${sellerPhone}`} className="text-navy hover:underline">{sellerPhone}</a> : <span className="text-gray-400">Not saved</span>}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-gray-900">{car.make} {car.model} {car.year}</p>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${CAR_ST[car.status || 'active'] ?? CAR_ST.active}`}>{statusLabel(car.status)}</span>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${VERIFICATION_ST[car.isTrusted ? 'verified' : car.verificationStatus || 'none'] ?? VERIFICATION_ST.none}`}>{verificationLabel(car)}</span>
+                      {car.overallScore && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-greenlight text-green border border-green/30">Health {car.overallScore}/10</span>}
+                    </div>
+                    <p className="text-navy font-black">{formatPrice(car.price)}</p>
+                    <p className="text-gray-400 text-xs">{car.city} · Seller: {sellerName}</p>
+                    <p className="text-gray-600 text-sm font-semibold">
+                      Seller phone:{' '}
+                      {sellerPhone ? <a href={`tel:${sellerPhone}`} className="text-navy hover:underline">{sellerPhone}</a> : <span className="text-gray-400">Not saved</span>}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    {sellerPhone && <a href={`tel:${sellerPhone}`} className="btn-outline text-sm !px-4 !py-2">Call seller</a>}
+                    {canInspect && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={updatingCarId === car.id}
+                          onClick={() => startInspection(car)}
+                          className="rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navydark disabled:opacity-50"
+                        >
+                          {car.verificationStatus === 'inspecting' ? 'Continue inspection' : 'Start inspection'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={updatingCarId === car.id}
+                          onClick={() => setCarVerification(car.id, 'rejected')}
+                          className="rounded-xl border border-red-300 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          Reject inspection
+                        </button>
+                      </>
+                    )}
+                    {car.isTrusted && (
+                      <button
+                        type="button"
+                        disabled={updatingCarId === car.id}
+                        onClick={() => setCarVerification(car.id, 'none')}
+                        className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        Remove inspected
+                      </button>
+                    )}
+                    {car.status !== 'sold' && (
+                      <button
+                        type="button"
+                        disabled={updatingCarId === car.id}
+                        onClick={() => setCarStatus(car.id, 'sold')}
+                        className="rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navydark disabled:opacity-50"
+                      >
+                        Mark sold
+                      </button>
+                    )}
+                    {car.status !== 'removed' && (
+                      <button
+                        type="button"
+                        disabled={updatingCarId === car.id}
+                        onClick={() => setCarStatus(car.id, 'removed')}
+                        className="rounded-xl border border-red-300 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    )}
+                    {car.status && car.status !== 'active' && (
+                      <button
+                        type="button"
+                        disabled={updatingCarId === car.id}
+                        onClick={() => setCarStatus(car.id, 'active')}
+                        className="rounded-xl border border-green/30 px-4 py-2 text-sm font-bold text-green hover:bg-greenlight disabled:opacity-50"
+                      >
+                        Restore
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => window.location.assign(`/cars/${car.id}`)}
+                      className="text-navy font-bold text-sm hover:underline"
+                    >
+                      View
+                    </button>
+                  </div>
                 </div>
-                {sellerPhone && <a href={`tel:${sellerPhone}`} className="btn-outline text-sm !px-4 !py-2">Call seller</a>}
-                <div className="flex flex-wrap justify-end gap-2">
-                  {car.status !== 'sold' && (
-                    <button
-                      type="button"
-                      disabled={updatingCarId === car.id}
-                      onClick={() => setCarStatus(car.id, 'sold')}
-                      className="rounded-xl bg-navy px-4 py-2 text-sm font-bold text-white hover:bg-navydark disabled:opacity-50"
-                    >
-                      Mark sold
-                    </button>
-                  )}
-                  {car.status !== 'removed' && (
-                    <button
-                      type="button"
-                      disabled={updatingCarId === car.id}
-                      onClick={() => setCarStatus(car.id, 'removed')}
-                      className="rounded-xl border border-red-300 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  )}
-                  {car.status && car.status !== 'active' && (
-                    <button
-                      type="button"
-                      disabled={updatingCarId === car.id}
-                      onClick={() => setCarStatus(car.id, 'active')}
-                      className="rounded-xl border border-green/30 px-4 py-2 text-sm font-bold text-green hover:bg-greenlight disabled:opacity-50"
-                    >
-                      Restore
-                    </button>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => window.location.assign(`/cars/${car.id}`)}
-                  className="text-navy font-bold text-sm hover:underline"
-                >
-                  View
-                </button>
+                {inspectionOpen && (
+                  <InspectionPanel
+                    draft={inspectionDraft}
+                    overallScore={draftOverallScore(inspectionDraft)}
+                    saving={updatingCarId === car.id}
+                    onChange={(index, patch) => setInspectionDraftSection(car, index, patch)}
+                    onSave={() => saveInspectionDraft(car)}
+                    onComplete={() => completeInspection(car)}
+                    onClose={() => setActiveInspectionCarId('')}
+                  />
+                )}
               </div>
             )
           })}
@@ -375,6 +713,103 @@ export function AdminDashboardClient() {
 
 function Empty({ text }: { text: string }) {
   return <div className="text-center py-16 text-gray-400"><div className="text-4xl mb-3">📋</div><p className="font-semibold">{text}</p></div>
+}
+
+function InspectionPanel({ draft, overallScore, saving, onChange, onSave, onComplete, onClose }: {
+  draft: InspectionDraftSection[]
+  overallScore: number
+  saving: boolean
+  onChange: (index: number, patch: Partial<InspectionDraftSection>) => void
+  onSave: () => void
+  onComplete: () => void
+  onClose: () => void
+}) {
+  const complete = draftComplete(draft)
+  const totalPoints = INSPECTION_SECTIONS.reduce((sum, section) => sum + section.points, 0)
+
+  return (
+    <div className="mt-5 rounded-2xl border border-navy/10 bg-navylight p-4">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-navy">300-point inspection</p>
+          <h3 className="text-lg font-black text-gray-900">Rate all 10 vehicle health sections</h3>
+          <p className="text-sm text-gray-500">Scores are weighted by checklist size, so Engine & Drivetrain carries more weight than Road Test.</p>
+        </div>
+        <div className="rounded-2xl bg-white px-5 py-3 text-center shadow-sm">
+          <p className="text-xs font-bold text-gray-400">Overall health</p>
+          <p className="text-3xl font-black text-navy">{overallScore}</p>
+          <p className="text-xs text-gray-400">/ 10</p>
+        </div>
+      </div>
+
+      <div className="mb-4 h-3 overflow-hidden rounded-full bg-white">
+        <div className="h-full rounded-full bg-green transition-all" style={{ width: `${Math.min(100, Math.max(0, overallScore * 10))}%` }} />
+      </div>
+
+      <div className="grid gap-3">
+        {draft.map((section, index) => {
+          const score = section.score === '' ? null : Number(section.score)
+          const weighted = score === null ? 0 : Math.round(((score * section.points) / totalPoints) * 100) / 100
+          return (
+            <div key={section.id} className="rounded-2xl border border-gray-100 bg-white p-4">
+              <div className="grid gap-3 lg:grid-cols-[1fr_120px_1fr] lg:items-start">
+                <div>
+                  <p className="text-sm font-black text-gray-900">{index + 1}. {section.title}</p>
+                  <p className="text-xs text-gray-400">{section.points} checklist points · weighted {weighted}/10</p>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-black uppercase tracking-wide text-gray-400">Score</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    step={0.5}
+                    value={section.score}
+                    onChange={event => {
+                      const value = event.target.value
+                      if (value === '') {
+                        onChange(index, { score: '' })
+                        return
+                      }
+                      const next = Math.max(1, Math.min(10, Number(value)))
+                      onChange(index, { score: Number.isFinite(next) ? String(next) : '' })
+                    }}
+                    className="input !py-2 text-center font-black"
+                    placeholder="1-10"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-black uppercase tracking-wide text-gray-400">Notes</label>
+                  <input
+                    value={section.notes}
+                    onChange={event => onChange(index, { notes: event.target.value })}
+                    className="input !py-2"
+                    placeholder="Issue, repair note, or clean"
+                  />
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+        <button type="button" onClick={onClose} className="btn-outline justify-center text-sm !px-4 !py-2">Close</button>
+        <button type="button" onClick={onSave} disabled={saving} className="btn-outline justify-center text-sm !px-4 !py-2 disabled:opacity-50">
+          {saving ? 'Saving...' : 'Save draft'}
+        </button>
+        <button
+          type="button"
+          onClick={onComplete}
+          disabled={saving || !complete}
+          className="rounded-xl bg-green px-4 py-2 text-sm font-bold text-white hover:bg-[#158759] disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          {saving ? 'Saving...' : 'Complete inspection & approve'}
+        </button>
+      </div>
+      {!complete && <p className="mt-2 text-right text-xs font-semibold text-gray-400">All 10 scores are required before approval.</p>}
+    </div>
+  )
 }
 
 function BidCard({ bid, car, buyer, seller, onAccept, onReject, onMarkSold, updating, carUpdating }: {

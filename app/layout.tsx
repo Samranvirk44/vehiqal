@@ -8,7 +8,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://vehiqal.com'
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'Vehiqal — Verified Car Deals in Pakistan', template: '%s | Vehiqal' },
-  description: 'Buy and sell verified used cars in Pakistan. We take full responsibility for payment and car. 300-point inspection. Win-win deals for buyer and seller. Call 0311 4642679.',
+  description: 'Buy and sell inspected used cars in Pakistan. We take full responsibility for payment and car on inspected deals. 300-point inspection. Win-win deals for buyer and seller. Call 0311 4642679.',
   keywords: ['used cars pakistan','buy car gujranwala','sell car lahore','verified used cars','car marketplace pakistan','vehiqal'],
   openGraph: {
     type:'website', locale:'en_PK', url:'https://vehiqal.com', siteName:'Vehiqal',

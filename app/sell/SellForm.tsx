@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { createCar, updateCar, CITIES, MAKES } from '@/lib/cars'
+import { createCar, updateCar, CITIES, MAKES, CAR_COLOURS, getCarColourOption, normalizeCarColourName } from '@/lib/cars'
 import { createUserProfile, getUserProfile, onAuthChange } from '@/lib/auth'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '@/lib/firebase'
@@ -84,6 +84,11 @@ export function SellForm() {
   const [loading, setLoading]   = useState(false)
   const [stage, setStage]       = useState('')
   const [done, setDone]         = useState(0)
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0)
+  const [wantsVerification, setWantsVerification] = useState(false)
+  const [colourChoice, setColourChoice] = useState('')
+  const [customColour, setCustomColour] = useState('')
+  const [colourPickerOpen, setColourPickerOpen] = useState(false)
   const [form, setForm] = useState({
     make:'',model:'',year:'',mileage:'',transmission:'',
     colour:'',city:'',engineSize:'',description:'',price:'',
@@ -120,9 +125,34 @@ export function SellForm() {
     return () => urls.forEach(URL.revokeObjectURL)
   }, [images])
 
+  useEffect(() => {
+    if (selectedPhotoIndex >= images.length) {
+      setSelectedPhotoIndex(Math.max(0, images.length - 1))
+    }
+  }, [images.length, selectedPhotoIndex])
+
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const setContactField = (k: 'name'|'phone', v: string) => setContact(c => ({ ...c, [k]: v }))
   const TRANS = ['Automatic','Manual']
+
+  const handleColourChoice = (value: string) => {
+    setColourChoice(value)
+    if (value === 'Other') {
+      set('colour', customColour)
+      setColourPickerOpen(false)
+      return
+    }
+    setCustomColour('')
+    set('colour', value)
+    setColourPickerOpen(false)
+  }
+
+  const handleCustomColour = (value: string) => {
+    setCustomColour(value)
+    set('colour', normalizeCarColourName(value))
+  }
+
+  const selectedColour = getCarColourOption(form.colour)
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? [])
@@ -133,7 +163,11 @@ export function SellForm() {
     }
 
     if (imageFiles.length > 0) {
-      setImages(current => [...current, ...imageFiles].slice(0, MAX_PHOTOS))
+      setImages(current => {
+        const next = [...current, ...imageFiles].slice(0, MAX_PHOTOS)
+        setSelectedPhotoIndex(Math.min(current.length, next.length - 1))
+        return next
+      })
     }
 
     // Reset input so the same photo can be selected again.
@@ -163,11 +197,12 @@ export function SellForm() {
       const docRef = await createCar({
         make:form.make, model:form.model, year:form.year,
         mileage:Number(form.mileage), transmission:form.transmission as any,
-        colour:form.colour, city:form.city, engineSize:form.engineSize,
+        colour:normalizeCarColourName(form.colour), city:form.city, engineSize:form.engineSize,
         description:form.description, price:Number(form.price)*100000,
         sellerId:user.uid,
         sellerName,
         sellerPhone,
+        verificationStatus:wantsVerification ? 'requested' : 'none',
       } as any)
 
       const urls: string[] = []
@@ -249,9 +284,75 @@ export function SellForm() {
                   <option value="">Select</option>{CITIES.map(c=><option key={c}>{c}</option>)}
                 </select></div>
               <div><label className="label">Engine size</label><input value={form.engineSize} onChange={e=>set('engineSize',e.target.value)} placeholder="e.g. 1300cc" className="input"/></div>
-              <div><label className="label">Colour</label><input value={form.colour} onChange={e=>set('colour',e.target.value)} placeholder="e.g. White" className="input"/></div>
+              <div className="relative col-span-2">
+                <label className="label">Colour</label>
+                <button
+                  type="button"
+                  onClick={()=>setColourPickerOpen(open=>!open)}
+                  aria-expanded={colourPickerOpen}
+                  className="input flex items-center justify-between text-left"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className="h-5 w-5 flex-shrink-0 rounded-full border border-gray-300"
+                      style={{backgroundColor:selectedColour?.hex ?? (colourChoice==='Other' ? '#CBD5E1' : '#F8FAFC')}}
+                    />
+                    <span className="truncate">{form.colour || (colourChoice==='Other' ? 'Other' : 'Select colour')}</span>
+                  </span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {colourPickerOpen&&(
+                  <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-xl">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {CAR_COLOURS.map(item=>(
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={()=>handleColourChoice(item.name)}
+                          className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-sm font-bold transition-colors ${selectedColour?.name===item.name?'border-navy bg-navylight text-navy':'border-gray-100 text-gray-700 hover:border-navy/30 hover:bg-gray-50'}`}
+                        >
+                          <span className="h-7 w-7 flex-shrink-0 rounded-full border border-gray-300" style={{backgroundColor:item.hex}}/>
+                          <span className="min-w-0 truncate">{item.name}</span>
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={()=>handleColourChoice('Other')}
+                        className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-sm font-bold transition-colors ${colourChoice==='Other'?'border-navy bg-navylight text-navy':'border-gray-100 text-gray-700 hover:border-navy/30 hover:bg-gray-50'}`}
+                      >
+                        <span className="h-7 w-7 flex-shrink-0 rounded-full border border-gray-300 bg-gradient-to-br from-red-400 via-yellow-300 to-blue-500"/>
+                        <span>Other</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
+            {colourChoice==='Other'&&(
+              <div>
+                <label className="label">Other colour</label>
+                <input value={customColour} onChange={e=>handleCustomColour(e.target.value)} placeholder="e.g. Rose Gold, Teal, Mat Grey" className="input"/>
+              </div>
+            )}
+            {form.colour&&(
+              <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-bold text-gray-700">
+                <span className="h-4 w-4 rounded-full border border-gray-300" style={{backgroundColor: selectedColour?.hex ?? '#CBD5E1'}}/>
+                {selectedColour?.name ?? form.colour}
+              </div>
+            )}
             <div><label className="label">Description</label><textarea value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Describe condition, features, history..." rows={4} className="input resize-none"/></div>
+            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-green/20 bg-greenlight/60 p-4 transition-colors hover:bg-greenlight">
+              <input
+                type="checkbox"
+                checked={wantsVerification}
+                onChange={e=>setWantsVerification(e.target.checked)}
+                className="mt-1 accent-green"
+              />
+              <span>
+                <span className="block text-sm font-black text-navy">Request Vehiqal inspection</span>
+                <span className="block text-xs leading-relaxed text-gray-500">Admin will review this request. Once accepted, the car gets an Inspected badge and Vehiqal contact is shown on the listing.</span>
+              </span>
+            </label>
             <div className="border-t border-gray-100 pt-4">
               <h3 className="mb-3 text-sm font-black text-gray-900">Contact details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -264,14 +365,28 @@ export function SellForm() {
         )}
         {step===2 && (
           <div>
-            <p className="text-sm text-gray-500 mb-4">📸 Add photos of your car. First photo is the cover. (optional but recommended)</p>
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <p className="text-sm text-gray-500 mb-4">📸 Add photos of your car. First photo is the cover. Tap any thumbnail to preview it large.</p>
+            <div className="mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-navylight">
+              {previews[selectedPhotoIndex] ? (
+                <div className="relative aspect-[16/10]">
+                  <img src={previews[selectedPhotoIndex]} alt={`Selected car photo ${selectedPhotoIndex + 1}`} className="h-full w-full object-cover"/>
+                  {selectedPhotoIndex===0&&<span className="absolute left-3 top-3 bg-gold text-yellow-900 text-xs font-black px-2.5 py-1 rounded-full">Cover photo</span>}
+                </div>
+              ) : (
+                <label htmlFor={PHOTO_INPUT_ID} className="flex aspect-[16/10] cursor-pointer flex-col items-center justify-center text-center text-navy">
+                  <span className="text-4xl">+</span>
+                  <span className="mt-2 text-sm font-black">Add car photos</span>
+                  <span className="mt-1 text-xs text-gray-400">Photos help buyers trust your listing</span>
+                </label>
+              )}
+            </div>
+            <div className="grid grid-cols-4 gap-3 mb-4">
               {previews.map((src,i)=>(
-                <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200">
+                <button key={i} type="button" onClick={()=>setSelectedPhotoIndex(i)} className={`relative aspect-square overflow-hidden rounded-xl border text-left transition-all ${selectedPhotoIndex===i?'border-navy ring-2 ring-navy/20':'border-gray-200 hover:border-navy/40'}`}>
                   <img src={src} alt={`Car photo ${i + 1}`} className="h-full w-full object-cover"/>
                   {i===0&&<span className="absolute top-1 left-1 bg-gold text-yellow-900 text-xs font-bold px-1.5 py-0.5 rounded">Cover</span>}
-                  <button type="button" onClick={()=>setImages(a=>a.filter((_,j)=>j!==i))} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">✕</button>
-                </div>
+                  <span onClick={(event)=>{event.stopPropagation();setImages(a=>a.filter((_,j)=>j!==i))}} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">✕</span>
+                </button>
               ))}
               {images.length<MAX_PHOTOS&&<label htmlFor={PHOTO_INPUT_ID} className="aspect-square rounded-xl border-2 border-dashed border-navy flex cursor-pointer flex-col items-center justify-center bg-navylight text-navy hover:bg-blue-50 transition-colors"><span className="text-2xl">+</span><span className="text-xs font-semibold mt-1">Add photos</span></label>}
             </div>

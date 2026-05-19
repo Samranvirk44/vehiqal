@@ -83,7 +83,7 @@ export function Footer() {
         <div>
           <h4 className="text-white font-bold mb-4">Vehiqal</h4>
           <ul className="space-y-2.5 text-sm">
-            <li><Link href="/cars?trusted=true" className="hover:text-gold transition-colors">★ Verified Cars</Link></li>
+            <li><Link href="/cars?trusted=true" className="hover:text-gold transition-colors">✓ Inspected Cars</Link></li>
             <li><Link href="/sell" className="hover:text-gold transition-colors">List your car</Link></li>
             <li><Link href="/login" className="hover:text-gold transition-colors">Sign in</Link></li>
             <li><a href="tel:+923114642679" className="hover:text-gold transition-colors">Call us</a></li>

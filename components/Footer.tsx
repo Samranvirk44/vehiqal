@@ -33,10 +33,12 @@ export function Footer() {
           {/* Contact card */}
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5">
             <p className="text-white font-bold text-sm mb-1">Contact us</p>
-            <p className="text-blue-300 text-xs">CEO / Managing Director</p>
-            <p className="text-white font-bold">Ghufran Elahi Virk</p>
+            <p className="text-blue-300 text-xs">Vehiqal support team</p>
             <a href="tel:+923114642679" className="flex items-center gap-2 text-gold font-black text-lg mt-2 hover:text-yellow-300 transition-colors">
               📞 0311 4642679
+            </a>
+            <a href="mailto:info@vehiqal.com" className="flex items-center gap-2 text-blue-200 font-semibold text-xs mt-1 hover:text-gold">
+              info@vehiqal.com
             </a>
             <a href="https://wa.me/923114642679" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 text-green-400 font-semibold text-xs mt-1 hover:text-green-300">
@@ -87,7 +89,7 @@ export function Footer() {
             <li><Link href="/sell" className="hover:text-gold transition-colors">List your car</Link></li>
             <li><Link href="/login" className="hover:text-gold transition-colors">Sign in</Link></li>
             <li><a href="tel:+923114642679" className="hover:text-gold transition-colors">Call us</a></li>
-            <li><a href="mailto:ghufran@vehiqal.com" className="hover:text-gold transition-colors">ghufran@vehiqal.com</a></li>
+            <li><a href="mailto:info@vehiqal.com" className="hover:text-gold transition-colors">info@vehiqal.com</a></li>
           </ul>
           <div className="mt-6 bg-white/5 border border-white/10 rounded-xl p-4">
             <p className="text-white font-bold text-sm mb-1">📞 Call directly</p>

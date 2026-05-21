@@ -1,43 +1,159 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { CITIES, MAKES, getCarColourOption } from '@/lib/cars'
+import Link from 'next/link'
+import { CarCard } from '@/components/CarCard'
+import { CITIES, MAKES, type Car } from '@/lib/cars'
 
 export function HeroSearch() {
   const router = useRouter()
   const [make, setMake] = useState('')
   const [city, setCity] = useState('')
+  const [trusted, setTrusted] = useState(false)
+  const [cars, setCars] = useState<Car[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+
+    import('@/lib/cars').then(({ getCars }) => {
+      getCars({
+        makeFilter: make || undefined,
+        city: city || undefined,
+        trustedOnly: trusted || undefined,
+        pageLimit: 8,
+      })
+        .then(results => {
+          if (!cancelled) setCars(results)
+        })
+        .catch(() => {
+          if (!cancelled) setCars([])
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false)
+        })
+    })
+
+    return () => { cancelled = true }
+  }, [make, city, trusted])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const p = new URLSearchParams()
     if (make) p.set('make', make)
     if (city) p.set('city', city)
-    router.push(`/cars?${p.toString()}`)
+    if (trusted) p.set('trusted', 'true')
+    router.push(`/cars${p.toString() ? `?${p.toString()}` : ''}`)
   }
 
+  const handleClear = () => {
+    setMake('')
+    setCity('')
+    setTrusted(false)
+  }
+
+  const p = new URLSearchParams()
+  if (make) p.set('make', make)
+  if (city) p.set('city', city)
+  if (trusted) p.set('trusted', 'true')
+  const browseHref = `/cars${p.toString() ? `?${p.toString()}` : ''}`
+  const resultTitle = trusted
+    ? `${city ? `Inspected cars in ${city}` : 'Inspected cars'}`
+    : `${city ? `Cars in ${city}` : 'Latest cars'}`
+  const resultLabel = loading
+    ? 'Finding cars...'
+    : `${cars.length} ${trusted ? 'inspected ' : ''}car${cars.length !== 1 ? 's' : ''}${city ? ` in ${city}` : ' available'}`
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-      <select value={make} onChange={e => setMake(e.target.value)}
-        className="flex-1 bg-white/10 border border-white/20 text-white font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-gold backdrop-blur">
-        <option value="" className="text-gray-800 bg-white">Any make</option>
-        {MAKES.map(m => <option key={m} value={m} className="text-gray-800 bg-white">{m}</option>)}
-      </select>
-      <select value={city} onChange={e => setCity(e.target.value)}
-        className="flex-1 bg-white/10 border border-white/20 text-white font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-gold backdrop-blur">
-        <option value="" className="text-gray-800 bg-white">Any city</option>
-        {CITIES.map(c => <option key={c} value={c} className="text-gray-800 bg-white">{c}</option>)}
-      </select>
-      <button type="submit" className="btn-gold px-8 py-4 text-base whitespace-nowrap !rounded-xl">
-        Search cars →
-      </button>
-    </form>
+    <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="rounded-[26px] bg-white p-3 shadow-2xl shadow-black/20 ring-1 ring-black/5">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_auto_auto_auto]">
+          <select
+            aria-label="Filter by make"
+            value={make}
+            onChange={e => setMake(e.target.value)}
+            className="h-14 w-full cursor-pointer rounded-2xl border border-gray-200 bg-white px-4 text-base font-bold text-gray-900 outline-none transition-all focus:border-navy focus:ring-4 focus:ring-navy/15"
+          >
+            <option value="">Any make</option>
+            {MAKES.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+
+          <select
+            aria-label="Filter by city"
+            value={city}
+            onChange={e => setCity(e.target.value)}
+            className="h-14 w-full cursor-pointer rounded-2xl border border-gray-200 bg-white px-4 text-base font-bold text-gray-900 outline-none transition-all focus:border-navy focus:ring-4 focus:ring-navy/15"
+          >
+            <option value="">Any city</option>
+            {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+
+          <label className="flex h-14 cursor-pointer items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 text-gray-800 transition-all hover:border-navy/30 hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={trusted}
+              onChange={e => setTrusted(e.target.checked)}
+              className="h-5 w-5 rounded border-gray-300 accent-navy"
+            />
+            <span className="whitespace-nowrap text-base font-black">✓ Inspected only</span>
+          </label>
+
+          <button type="submit" className="flex h-14 items-center justify-center rounded-2xl bg-navy px-8 text-base font-black text-white transition-colors hover:bg-navydark">
+            Apply
+          </button>
+
+          <button
+            type="button"
+            onClick={handleClear}
+            className="flex h-14 items-center justify-center rounded-2xl px-7 text-base font-black text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700"
+          >
+            Clear
+          </button>
+        </div>
+      </form>
+
+      <div className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 text-left shadow-xl shadow-black/10 backdrop-blur">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-black text-white">{resultTitle}</p>
+            <p className="text-xs font-semibold text-blue-300/65">{resultLabel}</p>
+          </div>
+          <Link href={browseHref} className="text-sm font-black text-gold hover:text-yellow-300">
+            View all →
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="flex gap-4 overflow-hidden">
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className="h-[360px] min-w-[280px] rounded-2xl bg-white/10 animate-pulse sm:min-w-[315px]" />
+            ))}
+          </div>
+        ) : cars.length > 0 ? (
+          <div className="-mx-1 overflow-x-auto pb-2">
+            <div className="flex gap-4 px-1">
+              {cars.map(car => (
+                <div key={car.id} className="min-w-[280px] max-w-[315px] flex-none text-left sm:min-w-[315px]">
+                  <CarCard car={car} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-white/15 bg-white/[0.03] px-4 py-8 text-center">
+            <p className="font-black text-white">No cars found</p>
+            <p className="mt-1 text-sm text-blue-300/65">Try another city or make.</p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
 // Latest cars section — fetches client-side so Firebase Web SDK works
 export function LatestCars() {
-  const [cars, setCars] = useState<any[]>([])
+  const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -65,37 +181,9 @@ export function LatestCars() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {cars.map((car: any) => (
-        <LatestCarLink key={car.id} car={car}/>
+      {cars.map(car => (
+        <CarCard key={car.id} car={car}/>
       ))}
     </div>
-  )
-}
-
-function LatestCarLink({ car }: { car: any }) {
-  const colourOption = getCarColourOption(car.colour)
-  return (
-    <a href={`/cars/${car.id}`} className="card group block bg-white">
-      <div className="relative h-48 bg-gray-100 overflow-hidden">
-        {car.images?.[0]
-          ? <img src={car.images[0]} alt={`${car.make} ${car.model}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-          : <div className="w-full h-full flex items-center justify-center text-5xl">🚗</div>
-        }
-        {car.isTrusted && (
-          <span className="absolute top-3 right-3 trusted-badge">✓ Inspected</span>
-        )}
-      </div>
-      <div className="p-5">
-        <h3 className="font-bold text-gray-900 text-lg">{car.make} {car.model} {car.year}</h3>
-        <p className="text-navy font-black text-xl mt-1">PKR {((car.price||0)/100000).toFixed(0)} lac</p>
-        <p className="text-gray-400 text-sm mt-1">📍 {car.city} · {Number(car.mileage||0).toLocaleString()} km</p>
-        {colourOption&&(
-          <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-gray-500">
-            <span className="h-3.5 w-3.5 rounded-full border border-gray-300" style={{backgroundColor: colourOption.hex}}/>
-            {colourOption.name}
-          </p>
-        )}
-      </div>
-    </a>
   )
 }

@@ -24,7 +24,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════
           HERO — full screen with animated logo
       ══════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pt-12 pb-16">
+      <section className="relative overflow-hidden px-4 py-8 md:py-12">
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1A4A9E] via-navy to-[#060E1E]" />
         {/* Grid */}
@@ -34,52 +34,51 @@ export default function HomePage() {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.04] bg-gold -translate-y-1/3 translate-x-1/3 pointer-events-none"/>
         <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-[0.05] bg-green -translate-y-1/2 -translate-x-1/3 pointer-events-none"/>
 
-        <div className="relative z-10 text-center max-w-3xl mx-auto">
+        <div className="relative z-10 text-center w-full max-w-6xl mx-auto">
 
-          {/* BIG LOGO + WORDMARK — the hero */}
-          <div className="flex flex-col items-center mb-8">
-            <VehiqalIcon size={120} animate={true} />
-            <div className="mt-5">
-              <VehiqalWordmark size="text-7xl md:text-8xl" />
+          {/* Compact brand signal */}
+          <div className="mb-5 flex items-center justify-center gap-3">
+            <VehiqalIcon size={54} animate={true} />
+            <div className="text-left">
+              <VehiqalWordmark size="text-3xl md:text-4xl" />
+              <p className="text-blue-300/70 text-[10px] tracking-[3px] uppercase font-bold mt-1">
+                Verified deals · Trusted platform
+              </p>
             </div>
-            <p className="text-blue-300/70 text-xs tracking-[4px] uppercase font-bold mt-2">
-              Verified deals · Trusted platform
-            </p>
           </div>
 
           {/* Slogan — main marketing message */}
-          <div className="bg-gold/10 border border-gold/25 rounded-2xl px-6 py-4 mb-8 fade-up">
-            <p className="text-gold font-black text-xl md:text-2xl">
+          <div className="mx-auto mb-5 inline-flex flex-col items-center rounded-2xl border border-gold/25 bg-gold/10 px-5 py-3 fade-up sm:flex-row sm:gap-3">
+            <p className="text-gold font-black text-base md:text-lg">
               We take your Headache
             </p>
-            <p className="text-blue-200 font-semibold text-base mt-1">
-              Payment &amp; Car Guarantee — A win-win deal for buyer and seller
+            <p className="text-blue-200 font-semibold text-sm md:text-base">
+              Payment &amp; Car Guarantee
             </p>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-black text-white leading-tight mb-5 fade-up-2">
+          <h1 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 fade-up-2">
             Pakistan&apos;s most trusted<br />
             <span className="text-gold">car marketplace</span>
           </h1>
 
-          <p className="text-blue-200/75 text-lg leading-relaxed max-w-xl mx-auto mb-10 fade-up-3">
+          <p className="text-blue-200/75 text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-6 fade-up-3">
             Every car physically inspected. Every deal fully managed by us.
             No stress, no scams, no strangers exchanging cash.
           </p>
 
           {/* Search form */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 mb-8 backdrop-blur fade-up-3">
-            <p className="text-blue-300/60 text-xs font-bold uppercase tracking-widest mb-3 text-left">Search cars</p>
+          <div className="mb-5 fade-up-3">
             <HeroSearch />
           </div>
 
           {/* CTA buttons */}
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
-            <Link href="/cars" className="btn-gold !px-8 !py-4 !text-base">
+          <div className="flex flex-wrap justify-center gap-3 mb-5">
+            <Link href="/cars" className="btn-gold !px-6 !py-3 !text-sm">
               Browse verified cars →
             </Link>
             <Link href="/sell"
-              className="border border-white/20 text-white font-bold px-8 py-4 rounded-xl hover:bg-white/8 transition-colors text-base">
+              className="border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/8 transition-colors text-sm">
               Sell your car free
             </Link>
           </div>
@@ -91,7 +90,7 @@ export default function HomePage() {
               { dot:'bg-gold',   label:'We handle everything' },
               { dot:'bg-blue-400', label:'Win-win for all parties' },
             ].map(p => (
-              <div key={p.label} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-blue-200/85 text-xs font-semibold">
+              <div key={p.label} className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-blue-200/85 text-xs font-semibold">
                 <span className={`w-2 h-2 rounded-full ${p.dot} animate-pulse`}/>
                 {p.label}
               </div>
@@ -100,7 +99,7 @@ export default function HomePage() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/20 text-xs tracking-widest uppercase">
+        <div className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-white/20 text-xs tracking-widest uppercase md:flex">
           <div className="w-px h-10 bg-gradient-to-b from-white/30 to-transparent"/>
           scroll
         </div>
@@ -265,9 +264,8 @@ export default function HomePage() {
             </div>
           </div>
           <div className="bg-gradient-to-br from-[#1A4A9E] to-navy border border-gold/30 rounded-2xl p-8 text-center">
-            <p className="text-blue-300/50 text-xs uppercase tracking-widest font-bold mb-3">Speak directly</p>
-            <p className="text-white font-black text-lg">Ghufran Elahi Virk</p>
-            <p className="text-blue-300/50 text-xs mb-5">CEO / Managing Director</p>
+            <p className="text-blue-300/50 text-xs uppercase tracking-widest font-bold mb-3">Speak to Vehiqal</p>
+            <p className="text-white font-black text-lg mb-5">Our support team is ready to help</p>
             <a href="tel:+923114642679"
               className="block bg-gold text-yellow-900 font-black text-2xl px-6 py-5 rounded-xl hover:bg-golddark transition-colors mb-3 tracking-wide">
               0311 4642679
@@ -275,6 +273,9 @@ export default function HomePage() {
             <a href="https://wa.me/923114642679" target="_blank" rel="noopener noreferrer"
               className="block bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm mb-4">
               💬 WhatsApp us
+            </a>
+            <a href="mailto:info@vehiqal.com" className="block text-blue-200 hover:text-gold font-bold text-sm mb-4 transition-colors">
+              info@vehiqal.com
             </a>
             <p className="text-blue-400/40 text-xs">Mon–Sat · 9am–7pm PKT</p>
           </div>

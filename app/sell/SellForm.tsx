@@ -13,14 +13,64 @@ const MAX_PHOTOS = 12
 const PHOTO_INPUT_ID = 'car-photo-upload'
 const PHOTO_UPLOAD_TIMEOUT_MS = 120000
 const IMAGE_FILE_PATTERN = /\.(jpe?g|png|webp|gif|heic|heif)$/i
+const MAX_UPLOAD_IMAGE_DIMENSION = 1280
+const TARGET_UPLOAD_IMAGE_BYTES = 450 * 1024
+const INITIAL_UPLOAD_IMAGE_QUALITY = 0.68
+const MIN_UPLOAD_IMAGE_QUALITY = 0.42
+const QUALITY_STEP = 0.08
 
 type PreparedPhoto = {
   blob: Blob
   contentType: string
 }
 
-// Compress image in browser before upload - reduces multi-MB photos dramatically.
-async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promise<PreparedPhoto> {
+function getContainedSize(width: number, height: number, maxDimension: number) {
+  const scale = Math.min(1, maxDimension / Math.max(width, height))
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  }
+}
+
+function canvasToJpegBlob(canvas: HTMLCanvasElement, quality: number): Promise<Blob | null> {
+  return new Promise(resolve => {
+    canvas.toBlob(resolve, 'image/jpeg', quality)
+  })
+}
+
+async function createCompressedJpeg(img: HTMLImageElement) {
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  if (!ctx || !img.width || !img.height) return null
+
+  let maxDimension = MAX_UPLOAD_IMAGE_DIMENSION
+  let bestBlob: Blob | null = null
+
+  while (maxDimension >= 720) {
+    const size = getContainedSize(img.width, img.height, maxDimension)
+    canvas.width = size.width
+    canvas.height = size.height
+
+    ctx.fillStyle = '#f8fafc'
+    ctx.fillRect(0, 0, size.width, size.height)
+    ctx.drawImage(img, 0, 0, size.width, size.height)
+
+    for (let quality = INITIAL_UPLOAD_IMAGE_QUALITY; quality >= MIN_UPLOAD_IMAGE_QUALITY; quality -= QUALITY_STEP) {
+      const blob = await canvasToJpegBlob(canvas, Math.max(MIN_UPLOAD_IMAGE_QUALITY, quality))
+      if (!blob) continue
+      bestBlob = blob
+      if (blob.size <= TARGET_UPLOAD_IMAGE_BYTES) return blob
+    }
+
+    if (bestBlob && bestBlob.size <= TARGET_UPLOAD_IMAGE_BYTES) return bestBlob
+    maxDimension = Math.round(maxDimension * 0.85)
+  }
+
+  return bestBlob
+}
+
+// Compress image in browser before upload. It resizes within a box, never crops.
+async function compressImage(file: File): Promise<PreparedPhoto> {
   return new Promise((resolve) => {
     const img = document.createElement('img')
     const url = URL.createObjectURL(file)
@@ -29,31 +79,14 @@ async function compressImage(file: File, maxWidth = 1200, quality = 0.75): Promi
       resolve({ blob: file, contentType: file.type || 'application/octet-stream' })
     }
 
-    img.onload = () => {
+    img.onload = async () => {
       URL.revokeObjectURL(url)
-      const canvas = document.createElement('canvas')
-      let { width, height } = img
-      if (!width || !height) {
+      try {
+        const blob = await createCompressedJpeg(img)
+        resolve(blob ? { blob, contentType: 'image/jpeg' } : { blob: file, contentType: file.type || 'application/octet-stream' })
+      } catch {
         resolve({ blob: file, contentType: file.type || 'application/octet-stream' })
-        return
       }
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width)
-        width = maxWidth
-      }
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        resolve({ blob: file, contentType: file.type || 'application/octet-stream' })
-        return
-      }
-      ctx.drawImage(img, 0, 0, width, height)
-      canvas.toBlob(
-        (blob) => resolve(blob ? { blob, contentType: 'image/jpeg' } : { blob: file, contentType: file.type || 'application/octet-stream' }),
-        'image/jpeg',
-        quality
-      )
     }
     img.onerror = useOriginal
     img.src = url
@@ -215,7 +248,7 @@ export function SellForm() {
             uploadBytes(
               ref(storage, `cars/${docRef.id}/img_${i}.jpg`),
               photo.blob,
-              { contentType: photo.contentType }
+              { contentType: photo.contentType, cacheControl: 'public,max-age=31536000,immutable' }
             ),
             PHOTO_UPLOAD_TIMEOUT_MS,
             'Photo upload is taking too long. Please check your connection and try again.'
@@ -365,11 +398,11 @@ export function SellForm() {
         )}
         {step===2 && (
           <div>
-            <p className="text-sm text-gray-500 mb-4">📸 Add photos of your car. First photo is the cover. Tap any thumbnail to preview it large.</p>
+            <p className="text-sm text-gray-500 mb-4">📸 Add photos of your car. First photo is the cover. Large photos are automatically compressed for fast upload and loading.</p>
             <div className="mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-navylight">
               {previews[selectedPhotoIndex] ? (
                 <div className="relative aspect-[16/10]">
-                  <img src={previews[selectedPhotoIndex]} alt={`Selected car photo ${selectedPhotoIndex + 1}`} className="h-full w-full object-cover"/>
+                  <img src={previews[selectedPhotoIndex]} alt={`Selected car photo ${selectedPhotoIndex + 1}`} className="h-full w-full object-contain"/>
                   {selectedPhotoIndex===0&&<span className="absolute left-3 top-3 bg-gold text-yellow-900 text-xs font-black px-2.5 py-1 rounded-full">Cover photo</span>}
                 </div>
               ) : (
@@ -383,7 +416,7 @@ export function SellForm() {
             <div className="grid grid-cols-4 gap-3 mb-4">
               {previews.map((src,i)=>(
                 <button key={i} type="button" onClick={()=>setSelectedPhotoIndex(i)} className={`relative aspect-square overflow-hidden rounded-xl border text-left transition-all ${selectedPhotoIndex===i?'border-navy ring-2 ring-navy/20':'border-gray-200 hover:border-navy/40'}`}>
-                  <img src={src} alt={`Car photo ${i + 1}`} className="h-full w-full object-cover"/>
+                  <img src={src} alt={`Car photo ${i + 1}`} className="h-full w-full object-contain bg-navylight"/>
                   {i===0&&<span className="absolute top-1 left-1 bg-gold text-yellow-900 text-xs font-bold px-1.5 py-0.5 rounded">Cover</span>}
                   <span onClick={(event)=>{event.stopPropagation();setImages(a=>a.filter((_,j)=>j!==i))}} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">✕</span>
                 </button>

@@ -45,42 +45,48 @@ export function CarsClient({ initialCity, initialMake, initialTrusted }: Props) 
 
   const title = `${trusted ? 'Inspected ' : ''}${make !== 'All' ? make + ' ' : ''}Cars${city !== 'All' ? ` in ${city}` : ' for Sale in Pakistan'}`
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-10">
-      <div className="mb-8 rounded-3xl bg-navylight p-6 md:p-8">
-        <div className="trusted-badge mb-4">✓ Inspected cars appear first</div>
-        <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-500 max-w-2xl">
-          {loading ? 'Loading listings…' : `${cars.length} listing${cars.length !== 1 ? 's' : ''} found`}
-          {' '}Verified cars are marked as Inspected and handled through Vehiqal contact.
-        </p>
-      </div>
+  const listingSummary = loading ? 'Loading listings...' : `${cars.length} listing${cars.length !== 1 ? 's' : ''} found.`
 
-      {/* Filters */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-8 flex flex-wrap gap-3 shadow-sm">
-        <select
-          value={make} onChange={e => setMake(e.target.value)}
-          className="flex-1 min-w-[140px] input !py-2.5 text-sm">
-          {MAKES_WITH_ALL.map(m => <option key={m} value={m}>{m === 'All' ? 'Any make' : m}</option>)}
-        </select>
-        <select
-          value={city} onChange={e => setCity(e.target.value)}
-          className="flex-1 min-w-[140px] input !py-2.5 text-sm">
-          {CITIES_WITH_ALL.map(c => <option key={c} value={c}>{c === 'All' ? 'Any city' : c}</option>)}
-        </select>
-        <label className="flex items-center gap-2 cursor-pointer px-4 py-2.5 border border-gray-200 rounded-xl hover:bg-gray-50">
-          <input
-            type="checkbox" checked={trusted}
-            onChange={e => setTrusted(e.target.checked)}
-            className="accent-gold"/>
-          <span className="text-sm font-semibold text-gray-700">✓ Inspected only</span>
-        </label>
-        <button onClick={handleApply} className="btn-navy text-sm !px-6 !py-2.5">Apply</button>
-        <button onClick={() => { setCity('All'); setMake('All'); setTrusted(false); router.push('/cars') }}
-          className="px-4 py-2.5 text-sm text-gray-400 hover:text-gray-600 font-medium">
-          Clear
-        </button>
-      </div>
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
+      <section className="mb-6 rounded-2xl border border-gray-100 bg-white p-4 md:p-5 shadow-sm">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="min-w-0">
+            <div className="trusted-badge mb-3">✓ Inspected cars appear first</div>
+            <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">{title}</h1>
+            <p className="mt-2 text-sm text-gray-500">
+              {listingSummary} Inspected cars are handled through Vehiqal contact.
+            </p>
+          </div>
+
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_auto_auto_auto] xl:max-w-3xl">
+            <select
+              aria-label="Filter by make"
+              value={make} onChange={e => setMake(e.target.value)}
+              className="input !py-2.5 text-sm">
+              {MAKES_WITH_ALL.map(m => <option key={m} value={m}>{m === 'All' ? 'Any make' : m}</option>)}
+            </select>
+            <select
+              aria-label="Filter by city"
+              value={city} onChange={e => setCity(e.target.value)}
+              className="input !py-2.5 text-sm">
+              {CITIES_WITH_ALL.map(c => <option key={c} value={c}>{c === 'All' ? 'Any city' : c}</option>)}
+            </select>
+            <label className="flex min-h-[46px] items-center justify-center gap-2 cursor-pointer rounded-xl border border-gray-200 px-4 py-2.5 hover:bg-gray-50 sm:col-span-2 lg:col-span-1">
+              <input
+                type="checkbox" checked={trusted}
+                onChange={e => setTrusted(e.target.checked)}
+                className="accent-gold"/>
+              <span className="whitespace-nowrap text-sm font-semibold text-gray-700">✓ Inspected only</span>
+            </label>
+            <button onClick={handleApply} className="btn-navy text-sm !px-6 !py-2.5">Apply</button>
+            <button onClick={() => { setCity('All'); setMake('All'); setTrusted(false); router.push('/cars') }}
+              className="rounded-xl px-4 py-2.5 text-sm font-bold text-gray-400 hover:bg-gray-50 hover:text-gray-700">
+              Clear
+            </button>
+          </div>
+        </div>
+      </section>
 
       {/* Results */}
       {loading ? (

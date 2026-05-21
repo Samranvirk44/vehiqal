@@ -587,7 +587,7 @@ export function AdminDashboardClient() {
               <div key={car.id} className="card p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                   <div className="w-20 h-16 rounded-xl bg-navylight flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
-                    {car.images?.[0] ? <img src={car.images[0]} alt="" className="h-full w-full object-cover"/> : '🚗'}
+                    {car.images?.[0] ? <img src={car.images[0]} alt="" loading="lazy" className="h-full w-full object-cover"/> : '🚗'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

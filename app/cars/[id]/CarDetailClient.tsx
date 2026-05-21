@@ -98,7 +98,19 @@ export function CarDetailClient({ id }: { id: string }) {
           <div className="lg:col-span-2">
             <div className="rounded-2xl overflow-hidden mb-4 bg-navylight">
               {selectedImage
-                ? <div className="relative h-72 md:h-96"><Image src={selectedImage} alt={`${car.make} ${car.model} ${car.year}`} fill className="object-cover" priority/></div>
+                ? (
+                  <div className="relative h-72 md:h-96">
+                    <Image
+                      src={selectedImage}
+                      alt={`${car.make} ${car.model} ${car.year}`}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 760px"
+                      quality={70}
+                      className="object-cover"
+                    />
+                  </div>
+                )
                 : <div className="h-72 flex items-center justify-center text-7xl">🚗</div>
               }
             </div>
@@ -111,7 +123,7 @@ export function CarDetailClient({ id }: { id: string }) {
                     onClick={() => setSelectedImageIndex(i)}
                     className={`relative h-20 rounded-xl overflow-hidden bg-navylight border transition-all ${selectedImageIndex===i?'border-navy ring-2 ring-navy/20':'border-transparent hover:border-navy/40'}`}
                   >
-                    <Image src={img} alt="" fill className="object-cover"/>
+                    <Image src={img} alt="" fill sizes="120px" quality={45} className="object-cover"/>
                   </button>
                 ))}
               </div>

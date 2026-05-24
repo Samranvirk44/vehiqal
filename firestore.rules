@@ -27,8 +27,16 @@ service cloud.firestore {
         || (
           signedIn()
           && resource.data.sellerId == request.auth.uid
+          && (!('status' in resource.data) || resource.data.status != 'sold')
+          && (!('isTrusted' in resource.data) || resource.data.isTrusted != true)
+          && (!('verificationStatus' in resource.data) || resource.data.verificationStatus != 'verified')
+          && (!('isTrusted' in request.resource.data) || request.resource.data.isTrusted != true)
+          && (!('verificationStatus' in request.resource.data) || request.resource.data.verificationStatus != 'verified')
           && request.resource.data.sellerId == resource.data.sellerId
-          && request.resource.data.status == resource.data.status
+          && (
+            (!('status' in resource.data) && !('status' in request.resource.data))
+            || request.resource.data.status == resource.data.status
+          )
         );
       allow delete: if isAdmin();
     }

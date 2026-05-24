@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { SellForm } from './SellForm'
 export const metadata: Metadata = {
   title: 'Sell Your Car in Pakistan — Free Listing on Vehiqal',
-  description: 'List your car free. Reach verified buyers. We manage payment and deal. Call 0311 4642679.',
+  description: 'List your car free. Reach verified buyers. We manage payment and deal. Call 0303 4642619.',
 }
 export default function SellPage() {
   return (
@@ -16,7 +17,9 @@ export default function SellPage() {
           ))}
         </div>
       </div>
-      <SellForm />
+      <Suspense fallback={<div className="card p-8 text-center text-gray-500">Loading form...</div>}>
+        <SellForm />
+      </Suspense>
     </div>
   )
 }

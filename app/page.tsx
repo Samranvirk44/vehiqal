@@ -5,7 +5,7 @@ import { VehiqalIcon, VehiqalWordmark } from '@/components/VehiqalLogo'
 
 export const metadata: Metadata = {
   title: 'Vehiqal — We take your Headache. Payment & Car Guarantee.',
-  description: 'Buy and sell inspected used cars in Pakistan. We take full responsibility for inspected car deals. 300-point inspection. Win-win for buyer and seller. Call 0311 4642679.',
+  description: 'Buy and sell inspected used cars in Pakistan. We take full responsibility for inspected car deals. 300-point inspection. Win-win for buyer and seller. Call 0303 4642619.',
 }
 export const revalidate = 300
 
@@ -266,11 +266,11 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-[#1A4A9E] to-navy border border-gold/30 rounded-2xl p-8 text-center">
             <p className="text-blue-300/50 text-xs uppercase tracking-widest font-bold mb-3">Speak to Vehiqal</p>
             <p className="text-white font-black text-lg mb-5">Our support team is ready to help</p>
-            <a href="tel:+923114642679"
+            <a href="tel:+923034642619"
               className="block bg-gold text-yellow-900 font-black text-2xl px-6 py-5 rounded-xl hover:bg-golddark transition-colors mb-3 tracking-wide">
-              0311 4642679
+              0303 4642619
             </a>
-            <a href="https://wa.me/923114642679" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/923034642619" target="_blank" rel="noopener noreferrer"
               className="block bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-xl transition-colors text-sm mb-4">
               💬 WhatsApp us
             </a>

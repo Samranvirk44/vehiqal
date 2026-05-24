@@ -33,6 +33,7 @@ export interface Car {
   id: string; make: string; model: string; year: string;
   price: number; mileage: number; city: string; transmission: string;
   engineSize?: string; colour?: string; description?: string;
+  fuelType?: string; condition?: string; assembly?: string; features?: string[];
   images: string[]; isTrusted: boolean; overallScore?: number;
   sellerId: string; sellerName?: string; sellerPhone?: string;
   status?: CarStatus | string; verificationStatus?: VerificationStatus | string;
@@ -53,8 +54,86 @@ export const CITIES = [
   'Karachi','Islamabad','Rawalpindi','Faisalabad','Peshawar','Multan','Quetta'
 ]
 export const CITIES_WITH_ALL = ['All', ...CITIES]
-export const MAKES = ['Toyota','Honda','Suzuki','Kia','Hyundai','Mitsubishi','Nissan','Daihatsu','Changan','MG','Other']
+export const MAKES = [
+  'Toyota',
+  'Honda',
+  'Suzuki',
+  'Hyundai',
+  'Kia',
+  'Changan',
+  'MG',
+  'DFSK',
+  'BYD',
+  'Deepal',
+  'Haval',
+  'Jetour',
+  'Proton',
+  'FAW',
+  'JAC',
+  'Peugeot',
+  'Audi',
+  'BMW',
+  'Mercedes-Benz',
+  'Isuzu',
+  'Hino',
+  'Nissan',
+  'Mitsubishi Motors',
+  'Mazda',
+  'Chevrolet',
+  'Ford Motor Company',
+  'Tesla',
+  'Daihatsu',
+  'Other',
+]
 export const MAKES_WITH_ALL = ['All', ...MAKES]
+export const FUEL_TYPES = ['Petrol','Diesel','EV','Other']
+export const CAR_CONDITIONS = ['Used','New','Used like New','Brand New','Not Good']
+export const ASSEMBLY_TYPES = ['Local','Imported']
+export const CAR_FEATURES = [
+  'LED/Matrix Headlight',
+  'Alloy Wheels',
+  'Sunroof',
+  'Panoramic roof',
+  'Parking sensors',
+  'Rear camera',
+  'Fog lamps',
+  'Infotainment system',
+  'Climate control',
+  'Leather or fabric seats',
+  'Airbags',
+  'ABS',
+  'ESC',
+  'Lane Departure Warning',
+  'Blind spot monitoring',
+  'All-Wheel drive (AWD)',
+  'Wireless Charging',
+  'Push-button start',
+  'Keyless entry',
+  'Remote engine start',
+  'Cruise control',
+  'Adaptive cruise control',
+  'Automatic climate control',
+  'Dual-zone climate control',
+  'Air purifier',
+  'Auto-dimming mirrors',
+  'Power tailgate',
+  'Gesture-controlled tailgate',
+  '360° camera',
+  'Electric parking brake',
+  'Digital instrument cluster',
+  'Touchscreen infotainment',
+  'Ambient lighting',
+  'Leather seats',
+  'Ventilated seats',
+  'Heated seats',
+  'Electric seat adjustment',
+  'Memory seats',
+  'Rear AC vents',
+  'Multi-color cabin lighting',
+  'Foldable rear seats',
+  'Cooled glove box',
+  'Heads-up display (HUD)',
+] as const
 export const INSPECTION_SECTIONS = [
   { id:'engine_drivetrain', title:'Engine & Drivetrain', points:42 },
   { id:'transmission_clutch', title:'Transmission & Clutch', points:28 },

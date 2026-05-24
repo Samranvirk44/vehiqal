@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { onAuthChange, getUserProfile, signOut } from '@/lib/auth'
-import { getCarsByUser, getUserBids, getSellerBids, formatPrice, type Bid, type Car } from '@/lib/cars'
+import { getCarById, getCarsByUser, getUserBids, getSellerBids, formatPrice, type Bid, type Car } from '@/lib/cars'
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { User } from 'firebase/auth'
@@ -67,8 +67,9 @@ export function DashboardClient() {
   const router = useRouter()
   const [user, setUser]         = useState<User|null>(null)
   const [profile, setProfile]   = useState<any>(null)
-  const [tab, setTab]           = useState<'listings'|'sold'|'bids'|'incoming'>('listings')
+  const [tab, setTab]           = useState<'listings'|'sold'|'bids'|'incoming'|'favourites'>('listings')
   const [listings, setListings] = useState<Car[]>([])
+  const [favouriteCars, setFavouriteCars] = useState<Car[]>([])
   const [myBids, setMyBids]     = useState<Bid[]>([])
   const [sBids, setSBids]       = useState<Bid[]>([])
   const [loading, setLoading]   = useState(true)
@@ -82,8 +83,12 @@ export function DashboardClient() {
       setLoadError('')
       try {
         const [p,c,b,s] = await Promise.all([getUserProfile(u.uid),getCarsByUser(u.uid),getUserBids(u.uid),getSellerBids(u.uid)])
+        const savedIds = Array.isArray(p?.savedCars) ? p.savedCars.filter(Boolean) : []
+        const favourites = (await Promise.all(savedIds.map((carId: string) => getCarById(carId))))
+          .filter((item): item is Car => Boolean(item && item.status !== 'removed'))
         setProfile(p)
         setListings(c)
+        setFavouriteCars(favourites)
         setMyBids(b)
         setSBids(s)
       } catch (error) {
@@ -133,8 +138,8 @@ export function DashboardClient() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[{n:listings.length,l:'My listings'},{n:soldListings.length,l:'Sold cars'},{n:myBids.length,l:'Bids placed'},{n:pending,l:'Incoming bids',hi:pending>0}].map(st=>(
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        {[{n:listings.length,l:'My listings'},{n:soldListings.length,l:'Sold cars'},{n:myBids.length,l:'Bids placed'},{n:pending,l:'Incoming bids',hi:pending>0},{n:favouriteCars.length,l:'Favourites'}].map(st=>(
           <div key={st.l} className={`card p-5 text-center ${st.hi?'border-2 border-gold':''}`}>
             <div className={`text-3xl font-black ${st.hi?'text-gold':'text-navy'}`}>{st.n}</div>
             <div className="text-xs text-gray-400 mt-1">{st.l}</div>
@@ -148,9 +153,9 @@ export function DashboardClient() {
         </div>
       )}
 
-      <div className="flex border-b border-gray-200 mb-6">
-        {[{k:'listings',l:'My listings'},{k:'sold',l:`Sold cars${soldListings.length>0?` (${soldListings.length})`:''}`},{k:'bids',l:'My bids'},{k:'incoming',l:`Incoming${pending>0?` (${pending})`:''}`}].map(t=>(
-          <button key={t.k} onClick={()=>setTab(t.k as any)} className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${tab===t.k?'border-navy text-navy':'border-transparent text-gray-400 hover:text-gray-600'}`}>{t.l}</button>
+      <div className="flex overflow-x-auto border-b border-gray-200 mb-6">
+        {[{k:'listings',l:'My listings'},{k:'sold',l:`Sold cars${soldListings.length>0?` (${soldListings.length})`:''}`},{k:'bids',l:'My bids'},{k:'incoming',l:`Incoming${pending>0?` (${pending})`:''}`},{k:'favourites',l:`Favourites${favouriteCars.length>0?` (${favouriteCars.length})`:''}`}].map(t=>(
+          <button key={t.k} onClick={()=>setTab(t.k as any)} className={`whitespace-nowrap px-6 py-3 font-bold text-sm border-b-2 transition-colors ${tab===t.k?'border-navy text-navy':'border-transparent text-gray-400 hover:text-gray-600'}`}>{t.l}</button>
         ))}
       </div>
 
@@ -173,6 +178,11 @@ export function DashboardClient() {
                   <p className="text-gray-400 text-xs">{car.city}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
+                  {car.status !== 'sold' && car.status !== 'removed' && !car.isTrusted && car.verificationStatus !== 'verified' && (
+                    <Link href={`/sell?edit=${car.id}`} className="rounded-xl border border-navy/20 px-3 py-2 text-xs font-black text-navy hover:bg-navylight">
+                      Edit
+                    </Link>
+                  )}
                   {!car.isTrusted && car.status !== 'sold' && car.status !== 'removed' && !['requested','inspecting'].includes(String(car.verificationStatus)) && (
                     <button
                       type="button"
@@ -203,6 +213,31 @@ export function DashboardClient() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-gray-900">{car.make} {car.model} {car.year}</p>
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-navy text-white">Sold</span>
+                  </div>
+                  <p className="text-navy font-black">{formatPrice(car.price)}</p>
+                  <p className="text-gray-400 text-xs">{car.city}</p>
+                </div>
+                <Link href={`/cars/${car.id}`} className="text-navy font-bold text-sm hover:underline">View →</Link>
+              </div>
+            ))
+          }
+        </div>
+      )}
+
+      {tab==='favourites'&&(
+        <div className="space-y-4">
+          {favouriteCars.length===0
+            ?<div className="text-center py-16 text-gray-400"><div className="text-4xl mb-3">♥</div><p className="font-semibold">No favourite cars yet</p><Link href="/cars" className="btn-navy mt-4 text-sm">Browse cars</Link></div>
+            :favouriteCars.map(car=>(
+              <div key={car.id} className="card p-4 flex items-center gap-4">
+                <div className="w-20 h-16 rounded-xl overflow-hidden bg-navylight flex-shrink-0">
+                  {car.images?.[0]?<Image src={car.images[0]} alt="" width={80} height={64} quality={45} className="object-cover w-full h-full"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🚗</div>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-bold text-gray-900">{car.make} {car.model} {car.year}</p>
+                    {car.isTrusted && <span className="trusted-badge inline-flex">✓ Inspected</span>}
+                    {car.status === 'sold' && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-navy text-white">Sold</span>}
                   </div>
                   <p className="text-navy font-black">{formatPrice(car.price)}</p>
                   <p className="text-gray-400 text-xs">{car.city}</p>

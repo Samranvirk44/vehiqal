@@ -104,6 +104,8 @@ export function CarCard({ car }: { car: Car }) {
           <span>·</span>
           <span>{Number(car.mileage).toLocaleString()} km</span>
           {car.transmission && <><span>·</span><span>{car.transmission}</span></>}
+          {car.fuelType && <><span>·</span><span>{car.fuelType}</span></>}
+          {car.condition && <><span>·</span><span>{car.condition}</span></>}
           {colourOption && (
             <>
               <span>·</span>

@@ -1,9 +1,14 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import { createCar, updateCar, CITIES, MAKES, CAR_COLOURS, getCarColourOption, normalizeCarColourName } from '@/lib/cars'
+import { useRouter, useSearchParams } from 'next/navigation'
+import {
+  createCar, updateCar, getCarById,
+  CITIES, MAKES, CAR_COLOURS, FUEL_TYPES, CAR_CONDITIONS, ASSEMBLY_TYPES, CAR_FEATURES,
+  getCarColourOption, normalizeCarColourName, type Car,
+} from '@/lib/cars'
 import { createUserProfile, getUserProfile, onAuthChange } from '@/lib/auth'
+import { isAdminIdentity } from '@/lib/admin'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '@/lib/firebase'
 import Link from 'next/link'
@@ -18,6 +23,8 @@ const TARGET_UPLOAD_IMAGE_BYTES = 450 * 1024
 const INITIAL_UPLOAD_IMAGE_QUALITY = 0.68
 const MIN_UPLOAD_IMAGE_QUALITY = 0.42
 const QUALITY_STEP = 0.08
+const CURRENT_YEAR = new Date().getFullYear()
+const YEAR_OPTIONS = Array.from({ length: 45 }, (_, i) => String(CURRENT_YEAR - i))
 
 type PreparedPhoto = {
   blob: Blob
@@ -109,24 +116,41 @@ function isImageFile(file: File) {
 
 export function SellForm() {
   const router   = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('edit')
   const [user, setUser]   = useState<User|null>(null)
   const [profile, setProfile] = useState<any>(null)
   const [step, setStep]   = useState(1)
   const [images, setImages]     = useState<File[]>([])
-  const [previews, setPreviews] = useState<string[]>([])
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [filePreviews, setFilePreviews] = useState<string[]>([])
   const [loading, setLoading]   = useState(false)
   const [stage, setStage]       = useState('')
   const [done, setDone]         = useState(0)
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0)
+  const [editingCar, setEditingCar] = useState<Car | null>(null)
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState('')
   const [wantsVerification, setWantsVerification] = useState(false)
+  const [makeChoice, setMakeChoice] = useState('')
+  const [makePickerOpen, setMakePickerOpen] = useState(false)
+  const [makeSearch, setMakeSearch] = useState('')
+  const [customMake, setCustomMake] = useState('')
   const [colourChoice, setColourChoice] = useState('')
   const [customColour, setCustomColour] = useState('')
   const [colourPickerOpen, setColourPickerOpen] = useState(false)
+  const [customFeature, setCustomFeature] = useState('')
   const [form, setForm] = useState({
     make:'',model:'',year:'',mileage:'',transmission:'',
+    fuelType:'',condition:'',assembly:'',
     colour:'',city:'',engineSize:'',description:'',price:'',
+    features:[] as string[],
   })
   const [contact, setContact] = useState({ name:'', phone:'' })
+  const isEditMode = Boolean(editId)
+  const isAdmin = isAdminIdentity(user)
+  const totalPhotos = existingImages.length + images.length
+  const previews = [...existingImages, ...filePreviews]
   useEffect(() => {
     return onAuthChange(async (u) => {
       setUser(u)
@@ -154,19 +178,151 @@ export function SellForm() {
   }, [])
   useEffect(() => {
     const urls = images.map(file => URL.createObjectURL(file))
-    setPreviews(urls)
+    setFilePreviews(urls)
     return () => urls.forEach(URL.revokeObjectURL)
   }, [images])
 
   useEffect(() => {
-    if (selectedPhotoIndex >= images.length) {
-      setSelectedPhotoIndex(Math.max(0, images.length - 1))
+    if (selectedPhotoIndex >= totalPhotos) {
+      setSelectedPhotoIndex(Math.max(0, totalPhotos - 1))
     }
-  }, [images.length, selectedPhotoIndex])
+  }, [totalPhotos, selectedPhotoIndex])
+
+  useEffect(() => {
+    if (!editId || !user) {
+      setEditLoading(false)
+      return
+    }
+    let active = true
+    setEditError('')
+    setEditLoading(true)
+    getCarById(editId).then(car => {
+      if (!active) return
+      if (!car) {
+        setEditError('This listing was not found.')
+        return
+      }
+      const adminUser = isAdminIdentity(user)
+      const inspected = Boolean(car.isTrusted) || car.verificationStatus === 'verified'
+      if (car.sellerId !== user.uid && !adminUser) {
+        setEditError('You can only edit your own listings.')
+        return
+      }
+      if (car.status === 'sold' && !adminUser) {
+        setEditError('Sold cars cannot be edited.')
+        return
+      }
+      if (inspected && !adminUser) {
+        setEditError('Inspected cars can only be edited by admin.')
+        return
+      }
+      setEditingCar(car)
+      setExistingImages(car.images ?? [])
+      setImages([])
+      setSelectedPhotoIndex(0)
+      setWantsVerification(['requested','inspecting','verified'].includes(String(car.verificationStatus)) || Boolean(car.isTrusted))
+      setMakePickerOpen(false)
+      setMakeSearch('')
+      setMakeChoice(findMakeChoice(car.make))
+      setCustomMake(findMakeChoice(car.make) === 'Other' ? car.make : '')
+      setColourChoice(findColourChoice(car.colour))
+      if (car.colour && !getCarColourOption(car.colour)) setCustomColour(car.colour)
+      setForm({
+        make:car.make || '',
+        model:car.model || '',
+        year:car.year || '',
+        mileage:car.mileage ? String(car.mileage) : '',
+        transmission:car.transmission || '',
+        fuelType:car.fuelType || '',
+        condition:car.condition || '',
+        assembly:car.assembly || '',
+        colour:car.colour || '',
+        city:car.city || '',
+        engineSize:car.engineSize || '',
+        description:car.description || '',
+        price:car.price ? String(car.price / 100000) : '',
+        features:Array.isArray(car.features) ? car.features : [],
+      })
+      setContact({
+        name:car.sellerName || (car.sellerId === user.uid ? profile?.name || user.displayName || '' : ''),
+        phone:car.sellerPhone || (car.sellerId === user.uid ? profile?.phone || user.phoneNumber || '' : ''),
+      })
+    }).catch(error => {
+      console.error('Edit listing load error:', error)
+      if (active) setEditError('Could not load this listing for editing.')
+    }).finally(() => {
+      if (active) setEditLoading(false)
+    })
+    return () => { active = false }
+  }, [editId, user, profile])
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const setContactField = (k: 'name'|'phone', v: string) => setContact(c => ({ ...c, [k]: v }))
   const TRANS = ['Automatic','Manual']
+
+  const selectedFeatures = form.features ?? []
+  const filteredMakes = MAKES
+    .filter(make => make !== 'Other')
+    .filter(make => make.toLowerCase().includes(makeSearch.trim().toLowerCase()))
+  const findFeature = (feature: string) => selectedFeatures.some(item => item.toLowerCase() === feature.toLowerCase())
+
+  const findMakeChoice = (make?: string) => {
+    if (!make) return ''
+    return MAKES.some(item => item.toLowerCase() === make.toLowerCase()) ? make : 'Other'
+  }
+
+  const handleMakeChoice = (value: string) => {
+    setMakeChoice(value)
+    if (value === 'Other') {
+      setCustomMake(current => current || '')
+      set('make', customMake)
+      setMakePickerOpen(false)
+      return
+    }
+    setCustomMake('')
+    set('make', value)
+    setMakePickerOpen(false)
+    setMakeSearch('')
+  }
+
+  const handleCustomMake = (value: string) => {
+    setCustomMake(value)
+    set('make', value.trim())
+  }
+
+  const findColourChoice = (colour?: string) => {
+    if (!colour) return ''
+    return CAR_COLOURS.some(item => item.name.toLowerCase() === colour.toLowerCase()) ? colour : 'Other'
+  }
+
+  const toggleFeature = (feature: string) => {
+    setForm(current => {
+      const exists = current.features.some(item => item.toLowerCase() === feature.toLowerCase())
+      return {
+        ...current,
+        features:exists ? current.features.filter(item => item.toLowerCase() !== feature.toLowerCase()) : [...current.features, feature],
+      }
+    })
+  }
+
+  const addCustomFeature = () => {
+    const feature = customFeature.trim()
+    if (!feature) return
+    setForm(current => {
+      if (current.features.some(item => item.toLowerCase() === feature.toLowerCase())) return current
+      return { ...current, features:[...current.features, feature] }
+    })
+    setCustomFeature('')
+  }
+
+  const removePhoto = (index: number) => {
+    if (index < existingImages.length) {
+      setExistingImages(current => current.filter((_, i) => i !== index))
+      return
+    }
+    const fileIndex = index - existingImages.length
+    setImages(current => current.filter((_, i) => i !== fileIndex))
+  }
 
   const handleColourChoice = (value: string) => {
     setColourChoice(value)
@@ -197,8 +353,9 @@ export function SellForm() {
 
     if (imageFiles.length > 0) {
       setImages(current => {
-        const next = [...current, ...imageFiles].slice(0, MAX_PHOTOS)
-        setSelectedPhotoIndex(Math.min(current.length, next.length - 1))
+        const remaining = Math.max(0, MAX_PHOTOS - existingImages.length - current.length)
+        const next = [...current, ...imageFiles.slice(0, remaining)]
+        setSelectedPhotoIndex(Math.min(existingImages.length + current.length, existingImages.length + next.length - 1))
         return next
       })
     }
@@ -209,34 +366,51 @@ export function SellForm() {
 
   const publish = async () => {
     if (!user) { router.push('/login?redirect=/sell&register=true'); return }
+    if (isEditMode && !editingCar) { alert('Listing is still loading. Please try again in a moment.'); return }
     if (!form.price || Number(form.price) < 1) { alert('Enter a valid price.'); return }
+    if (isEditMode && !isAdmin && editingCar?.status === 'sold') { alert('Sold cars cannot be edited.'); return }
+    if (isEditMode && !isAdmin && (editingCar?.isTrusted || editingCar?.verificationStatus === 'verified')) { alert('Inspected cars can only be edited by admin.'); return }
     const sellerName = (contact.name || profile?.name || user.displayName || '').trim()
     const sellerPhone = (contact.phone || profile?.phone || user.phoneNumber || '').trim()
     if (!sellerName) { alert('Enter your contact name.'); return }
     if (!sellerPhone || sellerPhone.replace(/\D/g, '').length < 8) { alert('Enter a valid contact phone number.'); return }
     setLoading(true); setDone(0)
     try {
-      await createUserProfile(user.uid, {
-        name:sellerName,
-        phone:sellerPhone,
-        role:profile?.role ?? 'sell',
-        isBuyer:profile?.isBuyer ?? true,
-        isSeller:true,
-        savedCars:profile?.savedCars ?? [],
-      })
+      const adminEditingExistingCar = isEditMode && isAdmin && editingCar
+      if (!adminEditingExistingCar) {
+        await createUserProfile(user.uid, {
+          name:sellerName,
+          phone:sellerPhone,
+          role:profile?.role ?? 'sell',
+          isBuyer:profile?.isBuyer ?? true,
+          isSeller:true,
+          savedCars:profile?.savedCars ?? [],
+        })
+      }
 
-      // Step 1 — create car doc (instant)
-      setStage('Creating listing…')
-      const docRef = await createCar({
+      const carPayload = {
         make:form.make, model:form.model, year:form.year,
         mileage:Number(form.mileage), transmission:form.transmission as any,
+        fuelType:form.fuelType, condition:form.condition, assembly:form.assembly,
         colour:normalizeCarColourName(form.colour), city:form.city, engineSize:form.engineSize,
         description:form.description, price:Number(form.price)*100000,
-        sellerId:user.uid,
+        features:form.features,
+        sellerId:editingCar?.sellerId ?? user.uid,
         sellerName,
         sellerPhone,
-        verificationStatus:wantsVerification ? 'requested' : 'none',
-      } as any)
+        verificationStatus:wantsVerification
+          ? (editingCar?.isTrusted ? 'verified' : editingCar?.verificationStatus === 'inspecting' ? 'inspecting' : 'requested')
+          : (editingCar?.isTrusted ? 'verified' : 'none'),
+      } as any
+
+      setStage(isEditMode ? 'Saving changes…' : 'Creating listing…')
+      const docRef = isEditMode && editId
+        ? { id: editId }
+        : await createCar(carPayload)
+
+      if (isEditMode && editId) {
+        await updateCar(editId, carPayload)
+      }
 
       const urls: string[] = []
       if (images.length > 0) {
@@ -246,7 +420,7 @@ export function SellForm() {
           setStage(`Uploading photo ${i + 1} of ${images.length}…`)
           const snap = await withTimeout(
             uploadBytes(
-              ref(storage, `cars/${docRef.id}/img_${i}.jpg`),
+              ref(storage, `cars/${docRef.id}/img_${existingImages.length + i}_${Date.now()}.jpg`),
               photo.blob,
               { contentType: photo.contentType, cacheControl: 'public,max-age=31536000,immutable' }
             ),
@@ -259,7 +433,10 @@ export function SellForm() {
 
         // Step 4 — save URLs
         setStage('Finishing…')
-        await updateCar(docRef.id, { images: urls } as any)
+        await updateCar(docRef.id, { images:[...existingImages, ...urls] } as any)
+      } else if (isEditMode && editId) {
+        setStage('Finishing…')
+        await updateCar(editId, { images:existingImages } as any)
       }
 
       router.push(`/cars/${docRef.id}`)
@@ -275,6 +452,15 @@ export function SellForm() {
     }
   }
 
+  if (editError) return (
+    <div className="card p-8 text-center">
+      <div className="text-5xl mb-4">⚠️</div>
+      <h2 className="font-black text-gray-900 text-xl mb-2">Cannot edit listing</h2>
+      <p className="text-gray-500 mb-6">{editError}</p>
+      <Link href="/dashboard" className="btn-navy justify-center w-full">Back to dashboard</Link>
+    </div>
+  )
+
   if (!user) return (
     <div className="card p-8 text-center">
       <div className="text-5xl mb-4">🚗</div>
@@ -285,8 +471,21 @@ export function SellForm() {
     </div>
   )
 
+  if (editLoading) return (
+    <div className="card p-8 text-center">
+      <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-navy border-t-transparent" />
+      <h2 className="font-black text-gray-900 text-xl mb-2">Loading listing</h2>
+      <p className="text-gray-500">Getting your car details ready for editing.</p>
+    </div>
+  )
+
   return (
     <div className="card overflow-hidden">
+      {isEditMode && (
+        <div className="border-b border-gold/30 bg-goldlight px-6 py-3 text-sm font-black text-yellow-900">
+          Editing listing{editingCar ? ` · ${editingCar.make} ${editingCar.model} ${editingCar.year}` : ''}
+        </div>
+      )}
       <div className="flex border-b border-gray-100">
         {['Details','Photos','Price'].map((s,i) => (
           <div key={s} className={`flex-1 py-3 text-center text-sm font-bold transition-colors ${step===i+1?'text-navy border-b-2 border-navy bg-navylight':step>i+1?'text-green':'text-gray-300'}`}>
@@ -298,19 +497,79 @@ export function SellForm() {
         {step===1 && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="label">Make *</label>
-                <select value={form.make} onChange={e=>set('make',e.target.value)} className="input">
-                  <option value="">Select</option>{MAKES.map(m=><option key={m} value={m}>{m}</option>)}
-                </select></div>
+              <div className="relative">
+                <label className="label">Make *</label>
+                <button
+                  type="button"
+                  onClick={()=>setMakePickerOpen(open=>!open)}
+                  aria-expanded={makePickerOpen}
+                  className="input flex items-center justify-between text-left"
+                >
+                  <span className="truncate">{form.make || (makeChoice === 'Other' ? 'Other' : 'Select make')}</span>
+                  <span className="text-gray-400">▾</span>
+                </button>
+                {makePickerOpen&&(
+                  <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-xl">
+                    <input
+                      value={makeSearch}
+                      onChange={e=>setMakeSearch(e.target.value)}
+                      placeholder="Search make"
+                      className="input mb-3 !py-2.5 text-sm"
+                      autoFocus
+                    />
+                    <div className="max-h-64 overflow-y-auto pr-1">
+                      {filteredMakes.length>0 ? filteredMakes.map(make=>(
+                        <button
+                          key={make}
+                          type="button"
+                          onClick={()=>handleMakeChoice(make)}
+                          className={`block w-full rounded-xl px-3 py-2 text-left text-sm font-bold transition-colors ${form.make.toLowerCase()===make.toLowerCase()?'bg-navylight text-navy':'text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          {make}
+                        </button>
+                      )) : (
+                        <p className="px-3 py-3 text-sm font-semibold text-gray-400">No make found</p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={()=>handleMakeChoice('Other')}
+                        className={`mt-1 block w-full rounded-xl px-3 py-2 text-left text-sm font-black transition-colors ${makeChoice==='Other'?'bg-navylight text-navy':'text-gray-700 hover:bg-gray-50'}`}
+                      >
+                        Other
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {makeChoice==='Other'&&(
+                  <input
+                    value={customMake}
+                    onChange={e=>handleCustomMake(e.target.value)}
+                    placeholder="Enter make"
+                    className="input mt-2"
+                  />
+                )}
+              </div>
               <div><label className="label">Model *</label><input value={form.model} onChange={e=>set('model',e.target.value)} placeholder="e.g. Corolla" className="input"/></div>
               <div><label className="label">Year *</label>
                 <select value={form.year} onChange={e=>set('year',e.target.value)} className="input">
-                  <option value="">Select</option>{Array.from({length:25},(_,i)=>String(2024-i)).map(y=><option key={y}>{y}</option>)}
+                  <option value="">Select</option>{YEAR_OPTIONS.map(y=><option key={y}>{y}</option>)}
                 </select></div>
               <div><label className="label">Mileage (km) *</label><input value={form.mileage} onChange={e=>set('mileage',e.target.value)} type="number" placeholder="e.g. 45000" className="input"/></div>
               <div><label className="label">Transmission *</label>
                 <select value={form.transmission} onChange={e=>set('transmission',e.target.value)} className="input">
                   <option value="">Select</option>{TRANS.map(t=><option key={t}>{t}</option>)}
+                </select></div>
+              <div><label className="label">Fuel type *</label>
+                <select value={form.fuelType} onChange={e=>set('fuelType',e.target.value)} className="input">
+                  <option value="">Select</option>{FUEL_TYPES.map(t=><option key={t}>{t}</option>)}
+                </select></div>
+              <div><label className="label">Condition *</label>
+                <select value={form.condition} onChange={e=>set('condition',e.target.value)} className="input">
+                  <option value="">Select</option>{CAR_CONDITIONS.map(t=><option key={t}>{t}</option>)}
+                </select></div>
+              <div><label className="label">Assembled *</label>
+                <select value={form.assembly} onChange={e=>set('assembly',e.target.value)} className="input">
+                  <option value="">Select</option>{ASSEMBLY_TYPES.map(t=><option key={t}>{t}</option>)}
                 </select></div>
               <div><label className="label">City *</label>
                 <select value={form.city} onChange={e=>set('city',e.target.value)} className="input">
@@ -373,6 +632,47 @@ export function SellForm() {
                 {selectedColour?.name ?? form.colour}
               </div>
             )}
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+              <label className="label mb-3">Car features (optional)</label>
+              <div className="-mx-1 overflow-x-auto pb-2">
+                <div className="flex gap-2 px-1">
+                  {CAR_FEATURES.map(feature => {
+                    const selected = findFeature(feature)
+                    return (
+                      <button
+                        key={feature}
+                        type="button"
+                        onClick={()=>toggleFeature(feature)}
+                        className={`flex-none rounded-full border px-3 py-2 text-xs font-black transition-colors ${selected ? 'border-navy bg-navy text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-navy/40'}`}
+                      >
+                        {selected ? '✓ ' : ''}{feature}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <input
+                  value={customFeature}
+                  onChange={e=>setCustomFeature(e.target.value)}
+                  onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();addCustomFeature()}}}
+                  placeholder="Add custom feature"
+                  className="input !py-2.5 text-sm"
+                />
+                <button type="button" onClick={addCustomFeature} className="btn-navy shrink-0 text-sm !px-4 !py-2.5">Add</button>
+              </div>
+              {selectedFeatures.length>0&&(
+                <div className="mt-3 -mx-1 overflow-x-auto pb-1">
+                  <div className="flex gap-2 px-1">
+                    {selectedFeatures.map(feature=>(
+                      <button key={feature} type="button" onClick={()=>toggleFeature(feature)} className="flex-none rounded-full bg-greenlight px-3 py-1.5 text-xs font-black text-green">
+                        {feature} ×
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <div><label className="label">Description</label><textarea value={form.description} onChange={e=>set('description',e.target.value)} placeholder="Describe condition, features, history..." rows={4} className="input resize-none"/></div>
             <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-green/20 bg-greenlight/60 p-4 transition-colors hover:bg-greenlight">
               <input
@@ -393,7 +693,7 @@ export function SellForm() {
                 <div><label className="label">Contact phone *</label><input type="tel" value={contact.phone} onChange={e=>setContactField('phone',e.target.value)} placeholder="e.g. 03001234567" className="input" autoComplete="tel"/></div>
               </div>
             </div>
-            <button type="button" onClick={()=>{if(!form.make||!form.model||!form.year||!form.mileage||!form.city||!form.transmission||!contact.name.trim()||!contact.phone.trim()){alert('Fill all required fields (*)');return}if(contact.phone.replace(/\D/g,'').length<8){alert('Enter a valid contact phone number.');return}setStep(2)}} className="btn-navy w-full justify-center">Next — Add photos →</button>
+            <button type="button" onClick={()=>{if(!form.make||!form.model||!form.year||!form.mileage||!form.city||!form.transmission||!form.fuelType||!form.condition||!form.assembly||!contact.name.trim()||!contact.phone.trim()){alert('Fill all required fields (*)');return}if(contact.phone.replace(/\D/g,'').length<8){alert('Enter a valid contact phone number.');return}setStep(2)}} className="btn-navy w-full justify-center">Next — Add photos →</button>
           </div>
         )}
         {step===2 && (
@@ -418,13 +718,13 @@ export function SellForm() {
                 <button key={i} type="button" onClick={()=>setSelectedPhotoIndex(i)} className={`relative aspect-square overflow-hidden rounded-xl border text-left transition-all ${selectedPhotoIndex===i?'border-navy ring-2 ring-navy/20':'border-gray-200 hover:border-navy/40'}`}>
                   <img src={src} alt={`Car photo ${i + 1}`} className="h-full w-full object-contain bg-navylight"/>
                   {i===0&&<span className="absolute top-1 left-1 bg-gold text-yellow-900 text-xs font-bold px-1.5 py-0.5 rounded">Cover</span>}
-                  <span onClick={(event)=>{event.stopPropagation();setImages(a=>a.filter((_,j)=>j!==i))}} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">✕</span>
+                  <span onClick={(event)=>{event.stopPropagation();removePhoto(i)}} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">✕</span>
                 </button>
               ))}
-              {images.length<MAX_PHOTOS&&<label htmlFor={PHOTO_INPUT_ID} className="aspect-square rounded-xl border-2 border-dashed border-navy flex cursor-pointer flex-col items-center justify-center bg-navylight text-navy hover:bg-blue-50 transition-colors"><span className="text-2xl">+</span><span className="text-xs font-semibold mt-1">Add photos</span></label>}
+              {totalPhotos<MAX_PHOTOS&&<label htmlFor={PHOTO_INPUT_ID} className="aspect-square rounded-xl border-2 border-dashed border-navy flex cursor-pointer flex-col items-center justify-center bg-navylight text-navy hover:bg-blue-50 transition-colors"><span className="text-2xl">+</span><span className="text-xs font-semibold mt-1">Add photos</span></label>}
             </div>
             <input id={PHOTO_INPUT_ID} type="file" accept="image/*" multiple className="sr-only" onChange={handlePhotoChange}/>
-            <p className="text-xs text-gray-400 text-center mb-4">{images.length}/{MAX_PHOTOS} photos</p>
+            <p className="text-xs text-gray-400 text-center mb-4">{totalPhotos}/{MAX_PHOTOS} photos</p>
             <div className="flex gap-3">
               <button type="button" onClick={()=>setStep(1)} className="btn-outline flex-1 justify-center text-sm">← Back</button>
               <button type="button" onClick={()=>setStep(3)} className="btn-navy flex-1 justify-center text-sm">Next — Set price →</button>
@@ -451,7 +751,7 @@ export function SellForm() {
             )}
             <div className="flex gap-3">
               <button type="button" onClick={()=>setStep(2)} disabled={loading} className="btn-outline flex-1 justify-center text-sm">← Back</button>
-              <button type="button" onClick={publish} disabled={loading} className="btn-navy flex-1 justify-center text-sm disabled:opacity-60">{loading?stage||'Publishing…':'Publish listing 🚀'}</button>
+              <button type="button" onClick={publish} disabled={loading} className="btn-navy flex-1 justify-center text-sm disabled:opacity-60">{loading?stage||'Publishing…':isEditMode?'Save changes':'Publish listing 🚀'}</button>
             </div>
           </div>
         )}

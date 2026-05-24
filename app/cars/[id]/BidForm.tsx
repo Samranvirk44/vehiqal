@@ -71,7 +71,7 @@ export function BidForm({ car }: { car: Car }) {
         <div className="text-center py-2">
           <p className="text-gray-500 text-sm mb-4">Sign in to place a bid</p>
           <Link href={`/login?redirect=/cars/${car.id}`} className="btn-navy w-full justify-center">Sign in to bid</Link>
-          <p className="text-gray-400 text-xs mt-3">Or call: <a href="tel:+923114642679" className="text-navy font-bold">0311 4642679</a></p>
+          <p className="text-gray-400 text-xs mt-3">Or call: <a href="tel:+923034642619" className="text-navy font-bold">0303 4642619</a></p>
         </div>
       ) : user.uid === car.sellerId ? (
         <div className="text-center py-2">

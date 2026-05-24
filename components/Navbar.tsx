@@ -60,9 +60,9 @@ export function Navbar() {
             <Link href="/cars"      className={`text-sm font-semibold transition-colors ${active('/cars')}`}>Browse Cars</Link>
             <Link href="/sell"      className={`text-sm font-semibold transition-colors ${active('/sell')}`}>Sell Your Car</Link>
             {/* Phone — prominent in nav */}
-            <a href="tel:+923114642679"
+            <a href="tel:+923034642619"
               className="flex items-center gap-2 bg-white/8 border border-white/12 rounded-lg px-3 py-1.5 text-gold text-sm font-bold hover:bg-white/15 transition-colors">
-              📞 0311 4642679
+              📞 0303 4642619
             </a>
             {admin ? (
               <div className="flex items-center gap-3 pl-3 border-l border-white/10">
@@ -95,7 +95,7 @@ export function Navbar() {
         <div className="lg:hidden bg-navydark border-t border-white/10 px-5 py-5 flex flex-col gap-4">
           <Link href="/cars"  onClick={() => setOpen(false)} className="text-blue-200 font-semibold">Browse Cars</Link>
           <Link href="/sell"  onClick={() => setOpen(false)} className="text-blue-200 font-semibold">Sell Your Car</Link>
-          <a href="tel:+923114642679" className="text-gold font-bold text-lg">📞 0311 4642679</a>
+          <a href="tel:+923034642619" className="text-gold font-bold text-lg">📞 0303 4642619</a>
           {admin
             ? <><Link href="/admin" onClick={() => setOpen(false)} className="text-blue-200 font-semibold">Admin</Link>
                 <button onClick={() => { setOpen(false); logoutAdmin() }} className="text-left text-red-400 text-sm font-semibold">Sign out</button></>

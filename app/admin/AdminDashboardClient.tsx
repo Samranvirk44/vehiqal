@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { clearAdminSession, hasAdminSession, isAdminIdentity, setAdminSession } from '@/lib/admin'
 import { getUserProfiles, onAuthChange } from '@/lib/auth'
@@ -604,6 +605,9 @@ export function AdminDashboardClient() {
                     </p>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
+                    <Link href={`/sell?edit=${car.id}`} className="rounded-xl border border-navy/20 px-4 py-2 text-sm font-bold text-navy hover:bg-navylight">
+                      Edit
+                    </Link>
                     {sellerPhone && <a href={`tel:${sellerPhone}`} className="btn-outline text-sm !px-4 !py-2">Call seller</a>}
                     {canInspect && (
                       <>

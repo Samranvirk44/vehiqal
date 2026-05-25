@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { SellForm } from './SellForm'
-export const metadata: Metadata = {
-  title: 'Sell Your Car in Pakistan — Free Listing on Vehiqal',
-  description: 'List your car free. Reach verified buyers. We manage payment and deal. Call 0303 4642619.',
-}
+import { CONTACT_PHONE_DISPLAY, pageMeta } from '@/lib/seo'
+
+export const metadata: Metadata = pageMeta({
+  title:'Sell Your Car in Pakistan - Free Listing',
+  description:`List your car free on Vehiqal, reach verified buyers, request inspection, and get support for a safer deal. Call ${CONTACT_PHONE_DISPLAY}.`,
+  path:'/sell',
+  keywords:['sell car Pakistan','list car free Pakistan','sell used car Pakistan','car buyers Pakistan'],
+})
 export default function SellPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">

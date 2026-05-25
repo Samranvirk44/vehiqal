@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
 import { CityCarsPage } from '@/components/CityCarsPage'
-export const metadata: Metadata = {
-  title: 'Used Cars for Sale in Sialkot — Vehiqal',
-  description: 'Browse verified used cars in Sialkot. 300-point inspections. Payment guaranteed. Call 0303 4642619.',
-}
+import { cityCarsMeta } from '@/lib/seo'
+export const metadata: Metadata = cityCarsMeta('Sialkot')
 export default function Page() { return <CityCarsPage city="Sialkot" /> }

@@ -1,10 +1,8 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { SellForm } from '@/app/sell/SellForm'
-export const metadata: Metadata = {
-  title: 'Sell Your Car in Sialkot — Free on Vehiqal',
-  description: 'Sell your car in Sialkot safely. Free listing, verified buyers, payment guaranteed. Call 0303 4642619.',
-}
+import { sellCityMeta } from '@/lib/seo'
+export const metadata: Metadata = sellCityMeta('Sialkot')
 export default function Page() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">

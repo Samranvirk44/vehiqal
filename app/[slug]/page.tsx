@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { CityCarsPage } from '@/components/CityCarsPage'
 import { SellForm } from '@/app/sell/SellForm'
+import { cityCarsMeta, sellCityMeta } from '@/lib/seo'
 
 const CITIES = [
   'Gujranwala','Lahore','Sialkot','Gujrat','Sheikhupura',
@@ -21,21 +22,15 @@ function cityFromSlug(slug: string, prefix: string) {
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const carsCity = cityFromSlug(params.slug, 'cars-for-sale-')
   if (carsCity) {
-    return {
-      title: `Used Cars for Sale in ${carsCity} - Vehiqal`,
-      description: `Browse verified used cars in ${carsCity}. 300-point inspections. Payment guaranteed. Call 0303 4642619.`,
-    }
+    return cityCarsMeta(carsCity)
   }
 
   const sellCity = cityFromSlug(params.slug, 'sell-car-')
   if (sellCity) {
-    return {
-      title: `Sell Your Car in ${sellCity} - Free on Vehiqal`,
-      description: `Sell your car in ${sellCity} safely. Free listing, verified buyers, payment guaranteed. Call 0303 4642619.`,
-    }
+    return sellCityMeta(sellCity)
   }
 
-  return {}
+  return { robots:{ index:false, follow:false } }
 }
 
 export default async function CityRoutePage({ params }: { params: { slug: string } }) {

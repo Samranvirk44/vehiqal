@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getCarById, getCars, formatPrice, getCarColourOption, type Car } from '@/lib/cars'
 import { createUserProfile, getUserProfile, onAuthChange } from '@/lib/auth'
+import { absoluteUrl } from '@/lib/seo'
 import { BidForm } from './BidForm'
 import type { User } from 'firebase/auth'
 
@@ -141,9 +142,21 @@ export function CarDetailClient({ id }: { id: string }) {
   const jsonLd = {
     '@context':'https://schema.org','@type':'Product',
     name:`${car.make} ${car.model} ${car.year}`,
+    brand:{ '@type':'Brand', name:car.make },
+    model:car.model,
+    vehicleModelDate:car.year,
+    sku:car.id,
     description:car.description||`${car.year} ${car.make} ${car.model} in ${car.city}`,
     image:images[0]??'',
-    offers:{'@type':'Offer',priceCurrency:'PKR',price:car.price,availability:'https://schema.org/InStock'},
+    url:absoluteUrl(`/cars/${car.id}`),
+    itemCondition:car.condition?.toLowerCase().includes('new') ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
+    offers:{
+      '@type':'Offer',
+      url:absoluteUrl(`/cars/${car.id}`),
+      priceCurrency:'PKR',
+      price:car.price,
+      availability:car.status === 'sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
+    },
   }
 
   return (

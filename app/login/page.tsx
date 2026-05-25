@@ -2,7 +2,13 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { LoginForm } from './LoginForm'
 import { VehiqalIcon } from '@/components/VehiqalLogo'
-export const metadata: Metadata = { title:'Sign in — Vehiqal' }
+
+export const metadata: Metadata = {
+  title:'Sign in - Vehiqal',
+  description:'Sign in to your Vehiqal account.',
+  robots:{ index:false, follow:false },
+}
+
 export default function LoginPage() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gray-50">

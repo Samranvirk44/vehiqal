@@ -2,12 +2,74 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { HeroSearch, LatestCars } from '@/components/LandingClient'
 import { VehiqalIcon, VehiqalWordmark } from '@/components/VehiqalLogo'
+import {
+  CONTACT_EMAIL,
+  CONTACT_PHONE_DISPLAY,
+  CONTACT_PHONE_TEL,
+  SITE_NAME,
+  absoluteUrl,
+  pageMeta,
+} from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Vehiqal — We take your Headache. Payment & Car Guarantee.',
-  description: 'Buy and sell inspected used cars in Pakistan. We take full responsibility for inspected car deals. 300-point inspection. Win-win for buyer and seller. Call 0303 4642619.',
-}
+export const metadata: Metadata = pageMeta({
+  title:'Vehiqal - Inspected Used Cars in Pakistan',
+  description:`Buy and sell inspected used cars in Pakistan with 300-point checks, verified listings, payment support, and safer deals. Call ${CONTACT_PHONE_DISPLAY}.`,
+  path:'/',
+  keywords:['inspected used cars Pakistan','verified car deals Pakistan','buy used cars Pakistan','sell car free Pakistan'],
+})
 export const revalidate = 300
+
+const organizationJsonLd = {
+  '@context':'https://schema.org',
+  '@type':'AutoDealer',
+  name:SITE_NAME,
+  url:absoluteUrl('/'),
+  telephone:CONTACT_PHONE_TEL,
+  email:CONTACT_EMAIL,
+  areaServed:['Pakistan','Gujranwala','Lahore','Sialkot','Gujrat','Sheikhupura','Karachi','Islamabad'],
+  slogan:'We take your headache.',
+  description:'Vehiqal helps buyers and sellers with inspected used cars, 300-point checks, verified listings, and safer car deals.',
+  sameAs:['https://www.facebook.com/share/17cLGmJ3D1/?mibextid=wwXIfr'],
+}
+
+const websiteJsonLd = {
+  '@context':'https://schema.org',
+  '@type':'WebSite',
+  name:SITE_NAME,
+  url:absoluteUrl('/'),
+  potentialAction:{
+    '@type':'SearchAction',
+    target:`${absoluteUrl('/cars')}?make={search_term_string}`,
+    'query-input':'required name=search_term_string',
+  },
+}
+
+const faqJsonLd = {
+  '@context':'https://schema.org',
+  '@type':'FAQPage',
+  mainEntity:[
+    {
+      '@type':'Question',
+      name:'What is Vehiqal?',
+      acceptedAnswer:{ '@type':'Answer', text:'Vehiqal is a car marketplace in Pakistan focused on inspected used cars, verified listings, and safer buyer-seller deals.' },
+    },
+    {
+      '@type':'Question',
+      name:'Do you inspect cars?',
+      acceptedAnswer:{ '@type':'Answer', text:'Yes. Inspected cars go through a 300-point vehicle check and show an inspected badge on the listing.' },
+    },
+    {
+      '@type':'Question',
+      name:'Which cities does Vehiqal operate in?',
+      acceptedAnswer:{ '@type':'Answer', text:'Vehiqal operates in Gujranwala, Lahore, Sialkot, Gujrat, Sheikhupura, Karachi, Islamabad, Rawalpindi, Faisalabad, Peshawar, Multan, and Quetta.' },
+    },
+    {
+      '@type':'Question',
+      name:'How can I contact Vehiqal?',
+      acceptedAnswer:{ '@type':'Answer', text:`Call Vehiqal at ${CONTACT_PHONE_DISPLAY} or email ${CONTACT_EMAIL}.` },
+    },
+  ],
+}
 
 export default function HomePage() {
 
@@ -21,6 +83,9 @@ export default function HomePage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(organizationJsonLd) }}/>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(websiteJsonLd) }}/>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(faqJsonLd) }}/>
       {/* ══════════════════════════════════════════
           HERO — full screen with animated logo
       ══════════════════════════════════════════ */}

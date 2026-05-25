@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import { CarsClient } from './CarsClient'
+import { CONTACT_PHONE_DISPLAY, pageMeta } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'Used Cars for Sale in Pakistan — Verified Listings',
-  description: 'Browse verified used cars across Pakistan. Every car inspected with 300-point checklist. Call 0303 4642619.',
-}
+export const metadata: Metadata = pageMeta({
+  title:'Used Cars for Sale in Pakistan - Inspected Listings',
+  description:`Browse used cars for sale across Pakistan. Inspected listings appear first and include 300-point checks. Call ${CONTACT_PHONE_DISPLAY}.`,
+  path:'/cars',
+  keywords:['used cars for sale Pakistan','inspected cars Pakistan','verified car listings','buy used car Pakistan'],
+})
 
 export default function CarsPage({
   searchParams,

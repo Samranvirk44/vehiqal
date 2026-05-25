@@ -2,22 +2,39 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://vehiqal.com'
+import { AiChatBot } from '@/components/AiChatBot'
+import { CONTACT_PHONE_DISPLAY, SITE_NAME, SITE_URL, absoluteUrl, coreKeywords } from '@/lib/seo'
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: { default: 'Vehiqal — Verified Car Deals in Pakistan', template: '%s | Vehiqal' },
-  description: 'Buy and sell inspected used cars in Pakistan. We take full responsibility for payment and car on inspected deals. 300-point inspection. Win-win deals for buyer and seller. Call 0303 4642619.',
-  keywords: ['used cars pakistan','buy car gujranwala','sell car lahore','verified used cars','car marketplace pakistan','vehiqal'],
+  metadataBase: new URL(SITE_URL),
+  applicationName:SITE_NAME,
+  title: { default: 'Vehiqal - Inspected Used Cars in Pakistan', template: '%s | Vehiqal' },
+  description: `Buy and sell inspected used cars in Pakistan. 300-point inspection, payment support, verified buyers, and safer deals. Call ${CONTACT_PHONE_DISPLAY}.`,
+  keywords: coreKeywords,
+  authors:[{ name:SITE_NAME, url:SITE_URL }],
+  creator:SITE_NAME,
+  publisher:SITE_NAME,
+  category:'automotive marketplace',
+  alternates:{ canonical:absoluteUrl('/') },
   openGraph: {
-    type:'website', locale:'en_PK', url:'https://vehiqal.com', siteName:'Vehiqal',
-    title:'Vehiqal — Verified Car Deals in Pakistan',
-    description:'We take your headache — Payment & Car Guarantee. 300-point inspections. Win-win deals.',
-    images:[{ url:'/og-image.png', width:1200, height:630 }],
+    type:'website', locale:'en_PK', url:SITE_URL, siteName:SITE_NAME,
+    title:'Vehiqal - Inspected Used Cars in Pakistan',
+    description:'We take your headache. 300-point inspections, verified listings, and safer car deals.',
+    images:[{ url:'/opengraph-image', width:1200, height:630, alt:'Vehiqal inspected car marketplace' }],
   },
-  twitter:{ card:'summary_large_image' },
-  robots:{ index:true, follow:true },
+  twitter:{
+    card:'summary_large_image',
+    title:'Vehiqal - Inspected Used Cars in Pakistan',
+    description:'Browse inspected cars or list your car free with Vehiqal.',
+    images:['/opengraph-image'],
+  },
+  robots:{
+    index:true,
+    follow:true,
+    googleBot:{ index:true, follow:true, 'max-image-preview':'large', 'max-snippet':-1, 'max-video-preview':-1 },
+  },
+  manifest:'/manifest.webmanifest',
+  formatDetection:{ telephone:true, email:true, address:false },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -30,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <main>{children}</main>
         <Footer />
+        <AiChatBot />
       </body>
     </html>
   )

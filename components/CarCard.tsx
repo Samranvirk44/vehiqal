@@ -16,6 +16,7 @@ export function CarCard({ car }: { car: Car }) {
     if (images.length < 2) return
     setPhotoIndex(current => (current + direction + images.length) % images.length)
   }
+  
 
   const handleSwipeEnd = (x: number) => {
     if (swipeStartX.current === null) return

@@ -85,9 +85,14 @@ export function Footer() {
         <div>
           <h4 className="text-white font-bold mb-4">Vehiqal</h4>
           <ul className="space-y-2.5 text-sm">
+            <li><Link href="/about" className="hover:text-gold transition-colors">About Vehiqal</Link></li>
+            <li><Link href="/contact" className="hover:text-gold transition-colors">Contact us</Link></li>
+            <li><Link href="/reviews" className="hover:text-gold transition-colors">Reviews</Link></li>
             <li><Link href="/cars?trusted=true" className="hover:text-gold transition-colors">✓ Inspected Cars</Link></li>
             <li><Link href="/sell" className="hover:text-gold transition-colors">List your car</Link></li>
             <li><Link href="/login" className="hover:text-gold transition-colors">Sign in</Link></li>
+            <li><Link href="/privacy" className="hover:text-gold transition-colors">Privacy policy</Link></li>
+            <li><Link href="/terms" className="hover:text-gold transition-colors">Terms</Link></li>
             <li><a href="tel:+923034642619" className="hover:text-gold transition-colors">Call us</a></li>
             <li><a href="mailto:info@vehiqal.com" className="hover:text-gold transition-colors">info@vehiqal.com</a></li>
           </ul>
@@ -100,6 +105,13 @@ export function Footer() {
 
       <div className="border-t border-white/10 py-6 px-4 text-center text-xs text-blue-400">
         <p>© {new Date().getFullYear()} Vehiqal. All rights reserved. · vehiqal.com · vehiqal.pk</p>
+        <p className="mt-1">
+          <Link href="/privacy" className="hover:text-gold">Privacy</Link>
+          <span className="mx-2">·</span>
+          <Link href="/terms" className="hover:text-gold">Terms</Link>
+          <span className="mx-2">·</span>
+          <Link href="/contact" className="hover:text-gold">Contact</Link>
+        </p>
         <p className="mt-1">Gujranwala · Lahore · Sialkot · Gujrat · Sheikhupura · Karachi · Islamabad</p>
       </div>
     </footer>

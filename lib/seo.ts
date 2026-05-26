@@ -6,6 +6,7 @@ export const CONTACT_PHONE_DISPLAY = '0303 4642619'
 export const CONTACT_PHONE_TEL = '+923034642619'
 export const CONTACT_WHATSAPP = '923034642619'
 export const CONTACT_EMAIL = 'info@vehiqal.com'
+export const GOOGLE_BUSINESS_URL = process.env.NEXT_PUBLIC_GOOGLE_BUSINESS_URL || ''
 
 export const coreKeywords = [
   'used cars Pakistan',

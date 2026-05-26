@@ -6,6 +6,7 @@ import {
   CONTACT_EMAIL,
   CONTACT_PHONE_DISPLAY,
   CONTACT_PHONE_TEL,
+  GOOGLE_BUSINESS_URL,
   SITE_NAME,
   absoluteUrl,
   pageMeta,
@@ -29,7 +30,7 @@ const organizationJsonLd = {
   areaServed:['Pakistan','Gujranwala','Lahore','Sialkot','Gujrat','Sheikhupura','Karachi','Islamabad'],
   slogan:'We take your headache.',
   description:'Vehiqal helps buyers and sellers with inspected used cars, 300-point checks, verified listings, and safer car deals.',
-  sameAs:['https://www.facebook.com/share/17cLGmJ3D1/?mibextid=wwXIfr'],
+  sameAs:['https://www.facebook.com/share/17cLGmJ3D1/?mibextid=wwXIfr', ...(GOOGLE_BUSINESS_URL ? [GOOGLE_BUSINESS_URL] : [])],
 }
 
 const websiteJsonLd = {
@@ -183,6 +184,33 @@ export default function HomePage() {
             <div className="text-xs text-blue-300/60 mt-1 font-semibold uppercase tracking-wider">{st.l}</div>
           </div>
         ))}
+      </section>
+
+      {/* Trust pages */}
+      <section className="bg-white px-4 py-12">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-gold">Trust & support</p>
+              <h2 className="mt-2 text-2xl font-black text-gray-900 md:text-3xl">Clear company, contact, review, and policy pages.</h2>
+            </div>
+            <Link href="/contact" className="text-sm font-black text-navy hover:text-gold">Contact Vehiqal →</Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-5">
+            {[
+              { href:'/about', title:'About', text:'Who we are and how inspected deals work.' },
+              { href:'/contact', title:'Contact', text:'Phone, WhatsApp, email, and support hours.' },
+              { href:'/reviews', title:'Reviews', text:'Feedback channels for buyers and sellers.' },
+              { href:'/privacy', title:'Privacy', text:'How customer and listing data is handled.' },
+              { href:'/terms', title:'Terms', text:'Marketplace rules for listings, bids, and deals.' },
+            ].map(item => (
+              <Link key={item.href} href={item.href} className="rounded-2xl border border-gray-100 bg-gray-50 p-5 transition hover:border-navy/20 hover:bg-white hover:shadow-sm">
+                <h3 className="font-black text-navy">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.text}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ══ RESPONSIBILITY — "We take your headache" ══ */}

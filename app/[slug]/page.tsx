@@ -3,20 +3,23 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { CityCarsPage } from '@/components/CityCarsPage'
 import { SellForm } from '@/app/sell/SellForm'
-import { cityCarsMeta, sellCityMeta } from '@/lib/seo'
-
-const CITIES = [
-  'Gujranwala','Lahore','Sialkot','Gujrat','Sheikhupura',
-  'Karachi','Islamabad','Rawalpindi','Faisalabad','Peshawar','Multan','Quetta',
-]
+import { SERVICE_AREAS, cityCarsMeta, citySlug, sellCityMeta } from '@/lib/seo'
 
 const cityBySlug = Object.fromEntries(
-  CITIES.map(city => [city.toLowerCase().replace(/\s+/g, '-'), city])
+  SERVICE_AREAS.map(city => [citySlug(city), city])
 )
+const explicitCitySlugs = new Set(['gujranwala','gujrat','islamabad','karachi','lahore','sheikhupura','sialkot'])
 
 function cityFromSlug(slug: string, prefix: string) {
   if (!slug.startsWith(prefix)) return null
   return cityBySlug[slug.slice(prefix.length)] ?? null
+}
+
+export function generateStaticParams() {
+  return SERVICE_AREAS.filter(city => !explicitCitySlugs.has(citySlug(city))).flatMap(city => [
+    { slug:`cars-for-sale-${citySlug(city)}` },
+    { slug:`sell-car-${citySlug(city)}` },
+  ])
 }
 
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {

@@ -7,6 +7,21 @@ export const CONTACT_PHONE_TEL = '+923034642619'
 export const CONTACT_WHATSAPP = '923034642619'
 export const CONTACT_EMAIL = 'info@vehiqal.com'
 export const GOOGLE_BUSINESS_URL = process.env.NEXT_PUBLIC_GOOGLE_BUSINESS_URL || ''
+export const FACEBOOK_URL = 'https://www.facebook.com/share/1EDrWp5oRn/?mibextid=wwXIfr'
+export const SERVICE_AREAS = [
+  'Gujranwala',
+  'Lahore',
+  'Sialkot',
+  'Gujrat',
+  'Sheikhupura',
+  'Karachi',
+  'Islamabad',
+  'Rawalpindi',
+  'Faisalabad',
+  'Peshawar',
+  'Multan',
+  'Quetta',
+]
 
 export const coreKeywords = [
   'used cars Pakistan',
@@ -88,4 +103,132 @@ export function sellCityMeta(city: string) {
     path:`/sell-car-${citySlug(city)}`,
     keywords:[`sell car ${city}`, `car buyers ${city}`, `list car ${city}`, `sell used car ${city}`],
   })
+}
+
+export function jsonLdGraph(items: Array<Record<string, any>>) {
+  return {
+    '@context':'https://schema.org',
+    '@graph':items.filter(Boolean),
+  }
+}
+
+export function businessJsonLd() {
+  return {
+    '@type':['AutoDealer','LocalBusiness'],
+    '@id':absoluteUrl('/#business'),
+    name:SITE_NAME,
+    url:absoluteUrl('/'),
+    telephone:CONTACT_PHONE_TEL,
+    email:CONTACT_EMAIL,
+    priceRange:'PKR',
+    image:absoluteUrl('/opengraph-image'),
+    logo:absoluteUrl('/icon'),
+    slogan:'We take your headache.',
+    description:'Vehiqal helps buyers and sellers in Pakistan with inspected used cars, verified listings, 300-point vehicle checks, and safer car deal support.',
+    areaServed:SERVICE_AREAS.map(city => ({ '@type':'City', name:city })),
+    contactPoint:[
+      {
+        '@type':'ContactPoint',
+        telephone:CONTACT_PHONE_TEL,
+        contactType:'customer support',
+        areaServed:'PK',
+        availableLanguage:['English','Urdu','Punjabi'],
+      },
+    ],
+    openingHoursSpecification:[
+      {
+        '@type':'OpeningHoursSpecification',
+        dayOfWeek:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+        opens:'09:00',
+        closes:'19:00',
+      },
+    ],
+    sameAs:[FACEBOOK_URL, ...(GOOGLE_BUSINESS_URL ? [GOOGLE_BUSINESS_URL] : [])],
+  }
+}
+
+export function websiteJsonLd() {
+  return {
+    '@type':'WebSite',
+    '@id':absoluteUrl('/#website'),
+    name:SITE_NAME,
+    url:absoluteUrl('/'),
+    publisher:{ '@id':absoluteUrl('/#business') },
+    potentialAction:{
+      '@type':'SearchAction',
+      target:`${absoluteUrl('/cars')}?make={search_term_string}`,
+      'query-input':'required name=search_term_string',
+    },
+  }
+}
+
+export function breadcrumbJsonLd(items: Array<{ name: string; path: string }>) {
+  return {
+    '@type':'BreadcrumbList',
+    itemListElement:items.map((item, index) => ({
+      '@type':'ListItem',
+      position:index + 1,
+      name:item.name,
+      item:absoluteUrl(item.path),
+    })),
+  }
+}
+
+export function carsCollectionJsonLd({
+  title,
+  description,
+  path,
+  city,
+}: {
+  title: string
+  description: string
+  path: string
+  city?: string
+}) {
+  return {
+    '@type':'CollectionPage',
+    '@id':`${absoluteUrl(path)}#collection`,
+    name:title,
+    description,
+    url:absoluteUrl(path),
+    isPartOf:{ '@id':absoluteUrl('/#website') },
+    about:[
+      { '@type':'Thing', name:'Used cars' },
+      { '@type':'Thing', name:'Inspected cars' },
+      ...(city ? [{ '@type':'City', name:city }] : []),
+    ],
+  }
+}
+
+export function cityFaqJsonLd(city: string) {
+  return {
+    '@type':'FAQPage',
+    '@id':`${absoluteUrl(`/cars-for-sale-${citySlug(city)}`)}#faq`,
+    mainEntity:[
+      {
+        '@type':'Question',
+        name:`Can I buy inspected used cars in ${city} on Vehiqal?`,
+        acceptedAnswer:{
+          '@type':'Answer',
+          text:`Yes. Vehiqal lists used cars in ${city}, and inspected cars appear first with vehicle health information and Vehiqal deal support.`,
+        },
+      },
+      {
+        '@type':'Question',
+        name:`Does Vehiqal help with car payment and handover in ${city}?`,
+        acceptedAnswer:{
+          '@type':'Answer',
+          text:`For inspected cars, Vehiqal helps manage the deal process, buyer-seller coordination, payment support, and handover guidance.`,
+        },
+      },
+      {
+        '@type':'Question',
+        name:`How do I sell my car in ${city}?`,
+        acceptedAnswer:{
+          '@type':'Answer',
+          text:`You can list your car for free on Vehiqal, add photos and contact details, and request inspection if you want the car to appear as inspected.`,
+        },
+      },
+    ],
+  }
 }

@@ -201,9 +201,9 @@ export function AiChatBot() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[70] sm:bottom-5 sm:right-5">
+    <div className="fixed bottom-3 right-3 z-[70] sm:bottom-5 sm:right-5">
       {open && (
-        <div className="mb-3 w-[calc(100vw-2rem)] max-w-[390px] overflow-hidden rounded-2xl border border-navy/10 bg-white shadow-2xl shadow-navy/20">
+        <div className="mb-2 w-[calc(100vw-1.5rem)] max-w-[390px] overflow-hidden rounded-xl border border-navy/10 bg-white shadow-2xl shadow-navy/20 sm:mb-3 sm:rounded-2xl">
           <div className="flex items-center justify-between bg-navy px-4 py-3 text-white">
             <div>
               <p className="text-sm font-black">Vehiqal AI</p>
@@ -219,7 +219,7 @@ export function AiChatBot() {
             </button>
           </div>
 
-          <div className="max-h-[430px] min-h-[280px] overflow-y-auto bg-gray-50 px-4 py-4">
+          <div className="max-h-[58vh] min-h-[260px] overflow-y-auto bg-gray-50 px-4 py-4 sm:max-h-[430px]">
             <div className="space-y-3">
               {messages.map(message => (
                 <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -283,11 +283,12 @@ export function AiChatBot() {
       <button
         type="button"
         onClick={() => setOpen(value => !value)}
-        className="flex items-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-black text-yellow-950 shadow-xl shadow-navy/20 transition-transform hover:-translate-y-0.5 hover:bg-golddark"
+        className="flex items-center gap-2 rounded-full bg-gold px-3 py-2.5 text-xs font-black text-yellow-950 shadow-xl shadow-navy/20 transition-transform hover:-translate-y-0.5 hover:bg-golddark sm:px-5 sm:py-3 sm:text-sm"
         aria-expanded={open}
       >
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-navy text-[11px] text-white">AI</span>
-        Ask Vehiqal
+        <span className="hidden sm:inline">Ask Vehiqal</span>
+        <span className="sm:hidden">Ask</span>
       </button>
     </div>
   )

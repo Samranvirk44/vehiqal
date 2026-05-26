@@ -5,19 +5,19 @@
 
 @layer base {
   html { scroll-behavior: smooth; }
-  body { font-family: 'Inter', system-ui, sans-serif; }
+  body { font-family: 'Inter', system-ui, sans-serif; background:#F7F9FC; }
 }
 
 @layer components {
-  .btn-gold    { @apply bg-gold text-yellow-900 font-bold px-6 py-3 rounded-xl hover:bg-golddark transition-all duration-200 inline-flex items-center gap-2; }
-  .btn-navy    { @apply bg-navy text-white font-bold px-6 py-3 rounded-xl hover:bg-navydark transition-all duration-200 inline-flex items-center gap-2; }
-  .btn-outline { @apply border-2 border-navy text-navy font-bold px-6 py-3 rounded-xl hover:bg-navylight transition-all duration-200 inline-flex items-center gap-2; }
-  .btn-white   { @apply bg-white text-navy font-bold px-6 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 inline-flex items-center gap-2; }
-  .card        { @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300; }
-  .input       { @apply w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent bg-white; }
+  .btn-gold    { @apply bg-gold text-yellow-900 font-bold px-4 py-2.5 md:px-6 md:py-3 rounded-lg hover:bg-golddark transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm md:text-base; }
+  .btn-navy    { @apply bg-navy text-white font-bold px-4 py-2.5 md:px-6 md:py-3 rounded-lg hover:bg-navydark transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm md:text-base; }
+  .btn-outline { @apply border border-navy text-navy font-bold px-4 py-2.5 md:px-6 md:py-3 rounded-lg hover:bg-navylight transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm md:text-base; }
+  .btn-white   { @apply bg-white text-navy font-bold px-4 py-2.5 md:px-6 md:py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 inline-flex items-center justify-center gap-2 text-sm md:text-base; }
+  .card        { @apply bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300; }
+  .input       { @apply w-full border border-gray-200 rounded-lg px-3 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-navy/15 focus:border-navy bg-white; }
   .label       { @apply block text-sm font-semibold text-gray-700 mb-2; }
-  .trusted-badge { @apply inline-flex items-center gap-1.5 bg-greenlight border border-green/30 text-green text-xs font-black px-3 py-1.5 rounded-full; }
-  .section     { @apply py-20 px-4 max-w-7xl mx-auto; }
+  .trusted-badge { @apply inline-flex items-center gap-1.5 bg-greenlight border border-green/30 text-green text-[11px] md:text-xs font-black px-2.5 py-1 rounded-full; }
+  .section     { @apply py-12 md:py-20 px-4 max-w-7xl mx-auto; }
 }
 
 /* Headlight flash animation */

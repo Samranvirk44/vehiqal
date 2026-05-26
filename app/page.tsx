@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { HeroSearch, LatestCars } from '@/components/LandingClient'
+import { HeroSearch } from '@/components/LandingClient'
 import { VehiqalIcon, VehiqalWordmark } from '@/components/VehiqalLogo'
 import {
   CONTACT_EMAIL,
   CONTACT_PHONE_DISPLAY,
-  CONTACT_PHONE_TEL,
-  GOOGLE_BUSINESS_URL,
-  SITE_NAME,
-  absoluteUrl,
+  SERVICE_AREAS,
+  businessJsonLd,
+  jsonLdGraph,
   pageMeta,
+  websiteJsonLd,
 } from '@/lib/seo'
 
 export const metadata: Metadata = pageMeta({
@@ -20,33 +20,7 @@ export const metadata: Metadata = pageMeta({
 })
 export const revalidate = 300
 
-const organizationJsonLd = {
-  '@context':'https://schema.org',
-  '@type':'AutoDealer',
-  name:SITE_NAME,
-  url:absoluteUrl('/'),
-  telephone:CONTACT_PHONE_TEL,
-  email:CONTACT_EMAIL,
-  areaServed:['Pakistan','Gujranwala','Lahore','Sialkot','Gujrat','Sheikhupura','Karachi','Islamabad'],
-  slogan:'We take your headache.',
-  description:'Vehiqal helps buyers and sellers with inspected used cars, 300-point checks, verified listings, and safer car deals.',
-  sameAs:['https://www.facebook.com/share/17cLGmJ3D1/?mibextid=wwXIfr', ...(GOOGLE_BUSINESS_URL ? [GOOGLE_BUSINESS_URL] : [])],
-}
-
-const websiteJsonLd = {
-  '@context':'https://schema.org',
-  '@type':'WebSite',
-  name:SITE_NAME,
-  url:absoluteUrl('/'),
-  potentialAction:{
-    '@type':'SearchAction',
-    target:`${absoluteUrl('/cars')}?make={search_term_string}`,
-    'query-input':'required name=search_term_string',
-  },
-}
-
 const faqJsonLd = {
-  '@context':'https://schema.org',
   '@type':'FAQPage',
   mainEntity:[
     {
@@ -62,7 +36,7 @@ const faqJsonLd = {
     {
       '@type':'Question',
       name:'Which cities does Vehiqal operate in?',
-      acceptedAnswer:{ '@type':'Answer', text:'Vehiqal operates in Gujranwala, Lahore, Sialkot, Gujrat, Sheikhupura, Karachi, Islamabad, Rawalpindi, Faisalabad, Peshawar, Multan, and Quetta.' },
+      acceptedAnswer:{ '@type':'Answer', text:`Vehiqal operates in ${SERVICE_AREAS.join(', ')}.` },
     },
     {
       '@type':'Question',
@@ -71,6 +45,12 @@ const faqJsonLd = {
     },
   ],
 }
+
+const homeJsonLd = jsonLdGraph([
+  businessJsonLd(),
+  websiteJsonLd(),
+  faqJsonLd,
+])
 
 export default function HomePage() {
 
@@ -84,13 +64,11 @@ export default function HomePage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(organizationJsonLd) }}/>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(websiteJsonLd) }}/>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(faqJsonLd) }}/>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(homeJsonLd) }}/>
       {/* ══════════════════════════════════════════
           HERO — full screen with animated logo
       ══════════════════════════════════════════ */}
-      <section className="relative overflow-hidden px-4 py-8 md:py-12">
+      <section className="relative overflow-hidden px-4 pb-8 pt-7 md:py-14">
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1A4A9E] via-navy to-[#060E1E]" />
         {/* Grid */}
@@ -100,35 +78,35 @@ export default function HomePage() {
         <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.04] bg-gold -translate-y-1/3 translate-x-1/3 pointer-events-none"/>
         <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full opacity-[0.05] bg-green -translate-y-1/2 -translate-x-1/3 pointer-events-none"/>
 
-        <div className="relative z-10 text-center w-full max-w-6xl mx-auto">
+        <div className="relative z-10 mx-auto w-full max-w-6xl text-center">
 
           {/* Compact brand signal */}
-          <div className="mb-5 flex items-center justify-center gap-3">
-            <VehiqalIcon size={54} animate={true} />
+          <div className="mb-4 flex items-center justify-center gap-3 md:mb-5">
+            <VehiqalIcon size={46} animate={true} />
             <div className="text-left">
-              <VehiqalWordmark size="text-3xl md:text-4xl" />
-              <p className="text-blue-300/70 text-[10px] tracking-[3px] uppercase font-bold mt-1">
+              <VehiqalWordmark size="text-2xl md:text-4xl" />
+              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[2.4px] text-blue-300/70 md:mt-1 md:text-[10px] md:tracking-[3px]">
                 Verified deals · Trusted platform
               </p>
             </div>
           </div>
 
           {/* Slogan — main marketing message */}
-          <div className="mx-auto mb-5 inline-flex flex-col items-center rounded-2xl border border-gold/25 bg-gold/10 px-5 py-3 fade-up sm:flex-row sm:gap-3">
-            <p className="text-gold font-black text-base md:text-lg">
+          <div className="fade-up mx-auto mb-4 inline-flex flex-col items-center rounded-xl border border-gold/25 bg-gold/10 px-4 py-2.5 sm:flex-row sm:gap-3 md:mb-5 md:rounded-2xl md:px-5 md:py-3">
+            <p className="text-sm font-black text-gold md:text-lg">
               We take your Headache
             </p>
-            <p className="text-blue-200 font-semibold text-sm md:text-base">
+            <p className="text-xs font-semibold text-blue-200 md:text-base">
               Payment &amp; Car Guarantee
             </p>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 fade-up-2">
+          <h1 className="fade-up-2 mb-3 text-3xl font-black leading-tight text-white md:mb-4 md:text-5xl">
             Pakistan&apos;s most trusted<br />
             <span className="text-gold">car marketplace</span>
           </h1>
 
-          <p className="text-blue-200/75 text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-6 fade-up-3">
+          <p className="fade-up-3 mx-auto mb-5 max-w-xl text-sm leading-relaxed text-blue-200/75 md:mb-6 md:max-w-2xl md:text-lg">
             Every car physically inspected. Every deal fully managed by us.
             No stress, no scams, no strangers exchanging cash.
           </p>
@@ -139,12 +117,12 @@ export default function HomePage() {
           </div>
 
           {/* CTA buttons */}
-          <div className="flex flex-wrap justify-center gap-3 mb-5">
+          <div className="mb-4 flex flex-wrap justify-center gap-2 md:mb-5 md:gap-3">
             <Link href="/cars" className="btn-gold !px-6 !py-3 !text-sm">
               Browse verified cars →
             </Link>
             <Link href="/sell"
-              className="border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/8 transition-colors text-sm">
+              className="rounded-lg border border-white/20 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/8 md:px-6">
               Sell your car free
             </Link>
           </div>
@@ -165,38 +143,38 @@ export default function HomePage() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-white/20 text-xs tracking-widest uppercase md:flex">
+        <div className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-white/20 text-xs tracking-widest uppercase lg:flex">
           <div className="w-px h-10 bg-gradient-to-b from-white/30 to-transparent"/>
           scroll
         </div>
       </section>
 
       {/* ══ STATS — cities covered, not cars ══ */}
-      <section className="bg-navydark text-white grid grid-cols-2 md:grid-cols-4">
+      <section className="grid grid-cols-2 bg-navydark text-white md:grid-cols-4">
         {[
           { n:'5', l:'Cities covered' },
           { n:'300', l:'Inspection points' },
           { n:'1,100+', l:'Deals completed' },
           { n:'100%', l:'Payment guarantee' },
         ].map((st,i) => (
-          <div key={st.l} className={`py-8 px-6 text-center ${i < 3 ? 'border-r border-white/8' : ''}`}>
-            <div className="text-3xl font-black text-gold">{st.n}</div>
-            <div className="text-xs text-blue-300/60 mt-1 font-semibold uppercase tracking-wider">{st.l}</div>
+          <div key={st.l} className={`px-3 py-5 text-center md:px-6 md:py-8 ${i < 3 ? 'border-r border-white/8' : ''}`}>
+            <div className="text-2xl font-black text-gold md:text-3xl">{st.n}</div>
+            <div className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-blue-300/60 md:text-xs">{st.l}</div>
           </div>
         ))}
       </section>
 
       {/* Trust pages */}
-      <section className="bg-white px-4 py-12">
+      <section className="bg-white px-4 py-10 md:py-12">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div className="mb-5 flex flex-col gap-2 md:mb-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-gold">Trust & support</p>
-              <h2 className="mt-2 text-2xl font-black text-gray-900 md:text-3xl">Clear company, contact, review, and policy pages.</h2>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-gold md:text-sm">Trust & support</p>
+              <h2 className="mt-2 text-xl font-black text-gray-900 md:text-3xl">Clear company, contact, review, and policy pages.</h2>
             </div>
             <Link href="/contact" className="text-sm font-black text-navy hover:text-gold">Contact Vehiqal →</Link>
           </div>
-          <div className="grid gap-4 md:grid-cols-5">
+          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-5 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
             {[
               { href:'/about', title:'About', text:'Who we are and how inspected deals work.' },
               { href:'/contact', title:'Contact', text:'Phone, WhatsApp, email, and support hours.' },
@@ -204,7 +182,7 @@ export default function HomePage() {
               { href:'/privacy', title:'Privacy', text:'How customer and listing data is handled.' },
               { href:'/terms', title:'Terms', text:'Marketplace rules for listings, bids, and deals.' },
             ].map(item => (
-              <Link key={item.href} href={item.href} className="rounded-2xl border border-gray-100 bg-gray-50 p-5 transition hover:border-navy/20 hover:bg-white hover:shadow-sm">
+              <Link key={item.href} href={item.href} className="min-w-[210px] snap-start rounded-lg border border-gray-100 bg-gray-50 p-4 transition hover:border-navy/20 hover:bg-white hover:shadow-sm md:min-w-0 md:p-5">
                 <h3 className="font-black text-navy">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-gray-500">{item.text}</p>
               </Link>
@@ -214,25 +192,25 @@ export default function HomePage() {
       </section>
 
       {/* ══ RESPONSIBILITY — "We take your headache" ══ */}
-      <section className="bg-white py-20 px-4">
+      <section className="bg-white px-4 py-12 md:py-20">
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-14">
             <div>
-              <div className="inline-flex items-center gap-2 bg-goldlight border border-gold/40 text-yellow-800 text-xs font-bold px-4 py-2 rounded-full mb-5 uppercase tracking-wider">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-goldlight px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-yellow-800 md:mb-5 md:px-4 md:py-2">
                 🤝 Our Responsibility
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-navy leading-tight mb-5">
+              <h2 className="mb-4 text-3xl font-black leading-tight text-navy md:mb-5 md:text-5xl">
                 We take your<br/>
                 <span className="text-gold">headache away</span>
               </h2>
-              <p className="text-gray-500 text-lg leading-relaxed mb-4">
+              <p className="mb-3 text-base leading-relaxed text-gray-500 md:mb-4 md:text-lg">
                 Buying or selling a car in Pakistan has always been stressful. Hidden faults, payment risks, strangers at your door.
               </p>
-              <p className="text-gray-700 text-lg leading-relaxed font-medium mb-8">
+              <p className="mb-5 text-base font-medium leading-relaxed text-gray-700 md:mb-8 md:text-lg">
                 We built Vehiqal to take all of that off your plate on inspected cars. From the first inspection to the final payment, <strong>we are responsible for inspected car deals.</strong>
               </p>
-              <div className="bg-gold/10 border-l-4 border-gold rounded-r-xl px-5 py-4">
-                <p className="text-navy font-black text-xl">Payment &amp; Car Guarantee</p>
+              <div className="rounded-r-lg border-l-4 border-gold bg-gold/10 px-4 py-3 md:px-5 md:py-4">
+                <p className="text-lg font-black text-navy md:text-xl">Payment &amp; Car Guarantee</p>
                 <p className="text-gray-600 text-sm mt-1">A fair, transparent, win-win deal for every buyer and seller on our platform.</p>
               </div>
             </div>
@@ -246,7 +224,7 @@ export default function HomePage() {
                 { icon:'🤝', title:'Win-win for everyone', color:'border-green', bg:'bg-greenlight',
                   desc:'Sellers get verified buyers at fair market prices. Buyers get inspected cars with zero surprises. We make sure both sides walk away satisfied.' },
               ].map(card => (
-                <div key={card.title} className={`${card.bg} border-l-4 ${card.color} rounded-xl p-5`}>
+                <div key={card.title} className={`${card.bg} border-l-4 ${card.color} rounded-lg p-4 md:p-5`}>
                   <div className="flex items-start gap-4">
                     <span className="text-2xl">{card.icon}</span>
                     <div>
@@ -262,19 +240,19 @@ export default function HomePage() {
       </section>
 
       {/* ══ INSPECTION ══ */}
-      <section className="bg-gradient-to-br from-goldlight to-[#FFF9EE] py-20 px-4 border-y border-gold/20">
+      <section className="border-y border-gold/20 bg-gradient-to-br from-goldlight to-[#FFF9EE] px-4 py-12 md:py-20">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="mb-8 text-center md:mb-12">
             <div className="trusted-badge text-sm px-4 py-2 mb-5">✓ Inspected by Vehiqal</div>
-            <h2 className="text-4xl md:text-5xl font-black text-navy mb-4">
+            <h2 className="mb-3 text-3xl font-black text-navy md:mb-4 md:text-5xl">
               We inspect every car.<br />
               <span className="text-gold">So you don&apos;t have to.</span>
             </h2>
-            <p className="text-gray-600 text-lg max-w-xl mx-auto">
+            <p className="mx-auto max-w-xl text-sm leading-relaxed text-gray-600 md:text-lg">
               Every verified car is physically inspected across 10 sections before listing. You see the full report and score before placing any bid.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
+          <div className="mb-8 grid grid-cols-2 gap-2 md:mb-10 md:grid-cols-5 md:gap-3">
             {[
               { n:'01', name:'Engine & Drivetrain',   pts:'42 pts' },
               { n:'02', name:'Transmission & Clutch', pts:'28 pts' },
@@ -287,7 +265,7 @@ export default function HomePage() {
               { n:'09', name:'Documents & History',   pts:'16 pts' },
               { n:'10', name:'Road Test',             pts:'15 pts' },
             ].map(s => (
-              <div key={s.n} className="bg-white rounded-xl p-4 border border-gold/20 relative shadow-sm">
+              <div key={s.n} className="relative rounded-lg border border-gold/20 bg-white p-3 shadow-sm md:p-4">
                 <div className="absolute top-3 right-3 w-5 h-5 bg-green rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">✓</span>
                 </div>
@@ -305,29 +283,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══ LATEST LISTINGS ══ */}
-      <section className="section">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-black text-gray-900">Latest listings</h2>
-            <p className="text-gray-400 text-sm mt-1">Fresh cars added daily across Pakistan</p>
-          </div>
-          <Link href="/cars" className="text-navy font-bold text-sm hover:text-gold transition-colors">View all →</Link>
-        </div>
-        <LatestCars />
-      </section>
-
       {/* ══ CITY LINKS ══ */}
-      <section className="bg-navylight py-14 px-4">
+      <section className="bg-navylight px-4 py-10 md:py-14">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-black text-navy mb-2">Find cars near you</h2>
+          <div className="mb-6 text-center md:mb-8">
+            <h2 className="mb-2 text-2xl font-black text-navy">Find cars near you</h2>
             <p className="text-gray-500 text-sm">Currently serving Punjab — expanding soon</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <div className="mb-5 grid grid-cols-2 gap-3 md:mb-6 md:grid-cols-5 md:gap-4">
             {punjabCities.map(city => (
               <Link key={city.name} href={`/cars-for-sale-${city.slug}`}
-                className="bg-white rounded-xl p-5 text-center hover:shadow-md hover:border-navy border border-transparent transition-all group">
+                className="group rounded-lg border border-transparent bg-white p-4 text-center transition-all hover:border-navy hover:shadow-md md:p-5">
                 <div className="text-2xl mb-2">🏙️</div>
                 <div className="font-bold text-gray-800 group-hover:text-navy text-sm">{city.name}</div>
               </Link>
@@ -338,25 +304,25 @@ export default function HomePage() {
       </section>
 
       {/* ══ CONTACT / FINAL CTA ══ */}
-      <section className="bg-navydark py-20 px-4">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <section className="bg-navydark px-4 py-12 md:py-20">
+        <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
           <div>
-            <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+            <h2 className="mb-3 text-3xl font-black text-white md:mb-4 md:text-4xl">
               Ready to buy or sell?
             </h2>
-            <p className="text-blue-300/70 text-lg leading-relaxed mb-6">
+            <p className="mb-5 text-base leading-relaxed text-blue-300/70 md:mb-6 md:text-lg">
               Browse verified cars or list yours for free. Every deal is managed by us — safely and transparently.
             </p>
-            <div className="flex gap-3 flex-wrap mb-8">
+            <div className="mb-6 flex flex-wrap gap-3 md:mb-8">
               <Link href="/cars" className="btn-gold">Browse cars</Link>
               <Link href="/sell" className="btn-white">List your car free</Link>
             </div>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
               <p className="text-gold font-black text-lg">We take your headache.</p>
               <p className="text-blue-300/60 text-sm mt-1">Payment &amp; Car Guarantee on every deal.</p>
             </div>
           </div>
-          <div className="bg-gradient-to-br from-[#1A4A9E] to-navy border border-gold/30 rounded-2xl p-8 text-center">
+          <div className="rounded-xl border border-gold/30 bg-gradient-to-br from-[#1A4A9E] to-navy p-5 text-center md:rounded-2xl md:p-8">
             <p className="text-blue-300/50 text-xs uppercase tracking-widest font-bold mb-3">Speak to Vehiqal</p>
             <p className="text-white font-black text-lg mb-5">Our support team is ready to help</p>
             <a href="tel:+923034642619"

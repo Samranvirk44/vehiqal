@@ -29,7 +29,7 @@ export function CarCard({ car }: { car: Car }) {
   return (
     <article className={`card group overflow-hidden ${car.isTrusted ? 'border-green/30 ring-1 ring-green/20 shadow-md' : ''}`}>
       <div
-        className="relative h-48 touch-pan-y select-none overflow-hidden bg-navylight"
+        className="relative h-52 touch-pan-y select-none overflow-hidden bg-navylight sm:h-48 md:h-52 xl:h-48"
         onPointerDown={event => {
           if ((event.target as HTMLElement).closest('button')) return
           swipeStartX.current = event.clientX
@@ -45,7 +45,7 @@ export function CarCard({ car }: { car: Car }) {
               fill
               sizes="(max-width: 640px) 280px, (max-width: 1024px) 33vw, 315px"
               quality={55}
-              className="pointer-events-none object-cover"
+              className="pointer-events-none object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               draggable={false}
             />
           )
@@ -66,7 +66,7 @@ export function CarCard({ car }: { car: Car }) {
                 event.stopPropagation()
                 movePhoto(-1)
               }}
-              className="absolute left-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl font-black text-navy shadow-sm transition-colors hover:bg-white"
+              className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl font-black text-navy shadow-sm transition-colors hover:bg-white md:left-3 md:h-9 md:w-9 md:text-2xl"
             >
               &lsaquo;
             </button>
@@ -78,7 +78,7 @@ export function CarCard({ car }: { car: Car }) {
                 event.stopPropagation()
                 movePhoto(1)
               }}
-              className="absolute right-3 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl font-black text-navy shadow-sm transition-colors hover:bg-white"
+              className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl font-black text-navy shadow-sm transition-colors hover:bg-white md:right-3 md:h-9 md:w-9 md:text-2xl"
             >
               &rsaquo;
             </button>
@@ -96,31 +96,27 @@ export function CarCard({ car }: { car: Car }) {
           </>
         )}
       </div>
-      <div className="p-5">
-        {car.isTrusted && <p className="mb-2 text-xs font-black uppercase tracking-wide text-green">Vehiqal verified car</p>}
-        <h3 className="font-bold text-gray-900 text-lg leading-tight">{car.make} {car.model} {car.year}</h3>
-        <p className="text-navy font-black text-xl mt-1">{formatPrice(car.price)}</p>
-        <div className="flex items-center gap-2 mt-2 text-gray-400 text-sm flex-wrap">
-          <span>📍 {car.city}</span>
-          <span>·</span>
-          <span>{Number(car.mileage).toLocaleString()} km</span>
-          {car.transmission && <><span>·</span><span>{car.transmission}</span></>}
-          {car.fuelType && <><span>·</span><span>{car.fuelType}</span></>}
-          {car.condition && <><span>·</span><span>{car.condition}</span></>}
+      <div className="p-4 md:p-5">
+        {car.isTrusted && <p className="mb-2 text-[11px] font-black uppercase tracking-wide text-green">Vehiqal verified car</p>}
+        <h3 className="line-clamp-2 text-base font-black leading-tight text-gray-900 md:text-lg">{car.make} {car.model} {car.year}</h3>
+        <p className="mt-1 text-lg font-black text-navy md:text-xl">{formatPrice(car.price)}</p>
+        <div className="mt-3 flex flex-wrap gap-1.5 text-xs font-bold text-gray-500 md:text-sm">
+          <span className="rounded-full bg-gray-50 px-2.5 py-1">{car.city}</span>
+          <span className="rounded-full bg-gray-50 px-2.5 py-1">{Number(car.mileage).toLocaleString()} km</span>
+          {car.transmission && <span className="rounded-full bg-gray-50 px-2.5 py-1">{car.transmission}</span>}
+          {car.fuelType && <span className="rounded-full bg-gray-50 px-2.5 py-1">{car.fuelType}</span>}
+          {car.condition && <span className="rounded-full bg-gray-50 px-2.5 py-1">{car.condition}</span>}
           {colourOption && (
-            <>
-              <span>·</span>
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-2.5 py-1">
                 <span className="h-3.5 w-3.5 rounded-full border border-gray-300" style={{backgroundColor: colourOption.hex}}/>
                 {colourOption.name}
               </span>
-            </>
           )}
         </div>
         {car.isTrusted && car.overallScore && (
-          <div className="mt-2 text-green-600 text-xs font-bold">Score: {car.overallScore}/10</div>
+          <div className="mt-3 rounded-lg bg-greenlight px-3 py-2 text-xs font-black text-green">Inspection score: {car.overallScore}/10</div>
         )}
-        <Link href={`/cars/${car.id}`} className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-navy px-4 py-2.5 text-sm font-black text-white transition-colors hover:bg-navy/90">
+        <Link href={`/cars/${car.id}`} className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-navy px-4 py-2.5 text-sm font-black text-white transition-colors hover:bg-navy/90">
           View details
         </Link>
       </div>

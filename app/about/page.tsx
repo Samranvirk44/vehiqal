@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { CONTACT_PHONE_DISPLAY, pageMeta } from '@/lib/seo'
+import { CONTACT_PHONE_DISPLAY, absoluteUrl, breadcrumbJsonLd, businessJsonLd, jsonLdGraph, pageMeta } from '@/lib/seo'
 
 export const metadata: Metadata = pageMeta({
   title:'About Vehiqal - Inspected Car Marketplace',
@@ -15,9 +15,26 @@ const steps = [
   { title:'Support the deal', text:'For inspected cars, Vehiqal helps manage buyer interest, payment support, and handover coordination.' },
 ]
 
+const aboutJsonLd = jsonLdGraph([
+  businessJsonLd(),
+  {
+    '@type':'AboutPage',
+    '@id':`${absoluteUrl('/about')}#about`,
+    name:'About Vehiqal',
+    url:absoluteUrl('/about'),
+    mainEntity:{ '@id':absoluteUrl('/#business') },
+  },
+  breadcrumbJsonLd([
+    { name:'Home', path:'/' },
+    { name:'About', path:'/about' },
+  ]),
+])
+
 export default function AboutPage() {
   return (
-    <div className="bg-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(aboutJsonLd) }}/>
+      <div className="bg-white">
       <section className="bg-navydark px-4 py-16 text-white">
         <div className="mx-auto max-w-5xl">
           <p className="mb-3 text-sm font-black uppercase tracking-[0.22em] text-gold">About Vehiqal</p>
@@ -87,6 +104,7 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   )
 }

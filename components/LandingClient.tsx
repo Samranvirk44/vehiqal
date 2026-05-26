@@ -66,55 +66,71 @@ export function HeroSearch() {
     : `${cars.length} ${trusted ? 'inspected ' : ''}car${cars.length !== 1 ? 's' : ''}${city ? ` in ${city}` : ' available'}`
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="rounded-[26px] bg-white p-3 shadow-2xl shadow-black/20 ring-1 ring-black/5">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_auto_auto_auto]">
-          <select
-            aria-label="Filter by make"
-            value={make}
-            onChange={e => setMake(e.target.value)}
-            className="h-14 w-full cursor-pointer rounded-2xl border border-gray-200 bg-white px-4 text-base font-bold text-gray-900 outline-none transition-all focus:border-navy focus:ring-4 focus:ring-navy/15"
-          >
-            <option value="">Any make</option>
-            {MAKES.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+    <div className="space-y-3 md:space-y-4">
+      <form onSubmit={handleSubmit} className="rounded-2xl bg-white/95 p-3 text-left shadow-2xl shadow-black/20 ring-1 ring-white/70 backdrop-blur md:rounded-3xl md:p-4">
+        <div className="mb-3 flex flex-col gap-1 px-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-gold">Search inventory</p>
+            <p className="mt-1 text-xs font-semibold text-gray-500 md:text-sm">Filter by make, city, and inspection status.</p>
+          </div>
+          <p className="text-xs font-bold text-gray-400">{resultLabel}</p>
+        </div>
 
-          <select
-            aria-label="Filter by city"
-            value={city}
-            onChange={e => setCity(e.target.value)}
-            className="h-14 w-full cursor-pointer rounded-2xl border border-gray-200 bg-white px-4 text-base font-bold text-gray-900 outline-none transition-all focus:border-navy focus:ring-4 focus:ring-navy/15"
-          >
-            <option value="">Any city</option>
-            {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_auto_auto]">
+          <label className="rounded-xl border border-gray-200 bg-white px-3 py-2 transition-all focus-within:border-navy focus-within:ring-4 focus-within:ring-navy/10 md:rounded-2xl md:py-2.5">
+            <span className="block text-[11px] font-black uppercase tracking-wide text-gray-400">Make</span>
+            <select
+              aria-label="Filter by make"
+              value={make}
+              onChange={e => setMake(e.target.value)}
+              className="mt-0.5 h-7 w-full cursor-pointer bg-transparent text-sm font-black text-gray-900 outline-none md:mt-1 md:h-8 md:text-base"
+            >
+              <option value="">Any make</option>
+              {MAKES.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </label>
 
-          <label className="flex h-14 cursor-pointer items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 text-gray-800 transition-all hover:border-navy/30 hover:bg-gray-50">
+          <label className="rounded-xl border border-gray-200 bg-white px-3 py-2 transition-all focus-within:border-navy focus-within:ring-4 focus-within:ring-navy/10 md:rounded-2xl md:py-2.5">
+            <span className="block text-[11px] font-black uppercase tracking-wide text-gray-400">City</span>
+            <select
+              aria-label="Filter by city"
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              className="mt-0.5 h-7 w-full cursor-pointer bg-transparent text-sm font-black text-gray-900 outline-none md:mt-1 md:h-8 md:text-base"
+            >
+              <option value="">Any city</option>
+              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+
+          <label className={`flex min-h-[46px] cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 transition-all md:col-span-2 md:min-h-[58px] md:gap-3 md:rounded-2xl xl:col-span-1 ${trusted ? 'border-green bg-greenlight text-green' : 'border-gray-200 bg-white text-gray-700 hover:border-navy/30 hover:bg-gray-50'}`}>
             <input
               type="checkbox"
               checked={trusted}
               onChange={e => setTrusted(e.target.checked)}
-              className="h-5 w-5 rounded border-gray-300 accent-navy"
+              className="h-4 w-4 rounded border-gray-300 accent-green"
             />
-            <span className="whitespace-nowrap text-base font-black">✓ Inspected only</span>
+            <span className="whitespace-nowrap text-sm font-black">Inspected only</span>
           </label>
 
-          <button type="submit" className="flex h-14 items-center justify-center rounded-2xl bg-navy px-8 text-base font-black text-white transition-colors hover:bg-navydark">
-            Apply
-          </button>
+          <div className="grid grid-cols-[1fr_auto] gap-2 md:col-span-2 xl:col-span-1">
+            <button type="submit" className="flex min-h-[46px] items-center justify-center rounded-xl bg-navy px-5 text-sm font-black text-white transition-colors hover:bg-navydark md:min-h-[58px] md:rounded-2xl md:px-7">
+              Search cars
+            </button>
 
-          <button
-            type="button"
-            onClick={handleClear}
-            className="flex h-14 items-center justify-center rounded-2xl px-7 text-base font-black text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700"
-          >
-            Clear
-          </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="flex min-h-[46px] items-center justify-center rounded-xl border border-gray-200 px-4 text-sm font-black text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-800 md:min-h-[58px] md:rounded-2xl md:px-5"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       </form>
 
-      <div className="rounded-[24px] border border-white/10 bg-white/[0.06] p-4 text-left shadow-xl shadow-black/10 backdrop-blur">
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3 text-left shadow-xl shadow-black/10 backdrop-blur md:rounded-[24px] md:p-4">
+        <div className="mb-3 flex items-center justify-between gap-3 md:mb-4">
           <div>
             <p className="text-sm font-black text-white">{resultTitle}</p>
             <p className="text-xs font-semibold text-blue-300/65">{resultLabel}</p>
@@ -125,16 +141,16 @@ export function HeroSearch() {
         </div>
 
         {loading ? (
-          <div className="flex gap-4 overflow-hidden">
+          <div className="flex gap-3 overflow-hidden md:gap-4">
             {[...Array(3)].map((_, index) => (
-              <div key={index} className="h-[360px] min-w-[280px] rounded-2xl bg-white/10 animate-pulse sm:min-w-[315px]" />
+              <div key={index} className="h-[320px] min-w-[250px] rounded-xl bg-white/10 animate-pulse sm:min-w-[315px] md:h-[360px] md:rounded-2xl" />
             ))}
           </div>
         ) : cars.length > 0 ? (
           <div className="-mx-1 overflow-x-auto pb-2">
-            <div className="flex gap-4 px-1">
+            <div className="flex gap-3 px-1 md:gap-4">
               {cars.map(car => (
-                <div key={car.id} className="min-w-[280px] max-w-[315px] flex-none text-left sm:min-w-[315px]">
+                <div key={car.id} className="min-w-[250px] max-w-[290px] flex-none text-left sm:min-w-[315px] md:max-w-[315px]">
                   <CarCard car={car} />
                 </div>
               ))}

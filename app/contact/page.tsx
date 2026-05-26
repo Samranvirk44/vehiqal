@@ -4,9 +4,11 @@ import {
   CONTACT_PHONE_DISPLAY,
   CONTACT_PHONE_TEL,
   CONTACT_WHATSAPP,
-  GOOGLE_BUSINESS_URL,
-  SITE_NAME,
   absoluteUrl,
+  breadcrumbJsonLd,
+  businessJsonLd,
+  GOOGLE_BUSINESS_URL,
+  jsonLdGraph,
   pageMeta,
 } from '@/lib/seo'
 
@@ -17,21 +19,20 @@ export const metadata: Metadata = pageMeta({
   keywords:['contact Vehiqal','Vehiqal phone number','car inspection support Pakistan','sell car support Pakistan'],
 })
 
-const contactJsonLd = {
-  '@context':'https://schema.org',
-  '@type':'ContactPage',
-  name:'Contact Vehiqal',
-  url:absoluteUrl('/contact'),
-  mainEntity:{
-    '@type':'AutoDealer',
-    name:SITE_NAME,
-    url:absoluteUrl('/'),
-    telephone:CONTACT_PHONE_TEL,
-    email:CONTACT_EMAIL,
-    areaServed:['Pakistan','Gujranwala','Lahore','Sialkot','Gujrat','Sheikhupura','Karachi','Islamabad','Rawalpindi','Faisalabad','Peshawar','Multan','Quetta'],
-    sameAs:GOOGLE_BUSINESS_URL ? [GOOGLE_BUSINESS_URL] : undefined,
+const contactJsonLd = jsonLdGraph([
+  businessJsonLd(),
+  {
+    '@type':'ContactPage',
+    '@id':`${absoluteUrl('/contact')}#contact`,
+    name:'Contact Vehiqal',
+    url:absoluteUrl('/contact'),
+    mainEntity:{ '@id':absoluteUrl('/#business') },
   },
-}
+  breadcrumbJsonLd([
+    { name:'Home', path:'/' },
+    { name:'Contact', path:'/contact' },
+  ]),
+])
 
 export default function ContactPage() {
   return (

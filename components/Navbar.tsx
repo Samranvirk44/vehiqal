@@ -43,16 +43,16 @@ export function Navbar() {
   }
 
   return (
-    <nav className="bg-navy/95 backdrop-blur-md sticky top-0 z-50 border-b border-white/5">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-navydark/95 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex h-14 items-center justify-between md:h-16">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <div className="transition-transform group-hover:scale-105">
-              <VehiqalIcon size={36} />
+              <VehiqalIcon size={32} />
             </div>
-            <VehiqalWordmark size="text-xl" />
+            <VehiqalWordmark size="text-lg md:text-xl" />
           </Link>
 
           {/* Desktop links */}
@@ -83,7 +83,12 @@ export function Navbar() {
           </div>
 
           {/* Mobile burger */}
-          <button onClick={() => setOpen(o => !o)} className="lg:hidden text-white p-2">
+          <button
+            onClick={() => setOpen(o => !o)}
+            className="lg:hidden rounded-lg border border-white/10 bg-white/5 p-2 text-white"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+          >
             <div className={`w-5 h-0.5 bg-white mb-1.5 transition-all ${open ? 'rotate-45 translate-y-2' : ''}`}/>
             <div className={`w-5 h-0.5 bg-white mb-1.5 transition-all ${open ? 'opacity-0' : ''}`}/>
             <div className={`w-5 h-0.5 bg-white transition-all ${open ? '-rotate-45 -translate-y-2' : ''}`}/>
@@ -92,17 +97,19 @@ export function Navbar() {
       </div>
 
       {open && (
-        <div className="lg:hidden bg-navydark border-t border-white/10 px-5 py-5 flex flex-col gap-4">
-          <Link href="/cars"  onClick={() => setOpen(false)} className="text-blue-200 font-semibold">Browse Cars</Link>
-          <Link href="/sell"  onClick={() => setOpen(false)} className="text-blue-200 font-semibold">Sell Your Car</Link>
-          <a href="tel:+923034642619" className="text-gold font-bold text-lg">📞 0303 4642619</a>
+        <div className="lg:hidden border-t border-white/10 bg-navydark px-4 py-4 shadow-2xl">
+          <div className="grid gap-2">
+            <Link href="/cars" onClick={() => setOpen(false)} className="rounded-lg bg-white/5 px-4 py-3 text-sm font-black text-blue-100">Browse Cars</Link>
+            <Link href="/sell" onClick={() => setOpen(false)} className="rounded-lg bg-white/5 px-4 py-3 text-sm font-black text-blue-100">Sell Your Car</Link>
+            <a href="tel:+923034642619" className="rounded-lg border border-gold/30 bg-gold/10 px-4 py-3 text-sm font-black text-gold">Call 0303 4642619</a>
+          </div>
           {admin
-            ? <><Link href="/admin" onClick={() => setOpen(false)} className="text-blue-200 font-semibold">Admin</Link>
-                <button onClick={() => { setOpen(false); logoutAdmin() }} className="text-left text-red-400 text-sm font-semibold">Sign out</button></>
+            ? <div className="mt-3 grid grid-cols-2 gap-2"><Link href="/admin" onClick={() => setOpen(false)} className="btn-white">Admin</Link>
+                <button onClick={() => { setOpen(false); logoutAdmin() }} className="rounded-lg border border-red-400/30 px-4 py-2.5 text-sm font-black text-red-300">Sign out</button></div>
             : user
-            ? <><Link href="/dashboard" onClick={() => setOpen(false)} className="text-blue-200 font-semibold">Dashboard</Link>
-                <button onClick={() => { signOut(); setOpen(false) }} className="text-left text-red-400 text-sm font-semibold">Sign out</button></>
-            : <Link href="/login" onClick={() => setOpen(false)} className="btn-gold w-fit text-sm">Sign in</Link>
+            ? <div className="mt-3 grid grid-cols-2 gap-2"><Link href="/dashboard" onClick={() => setOpen(false)} className="btn-white">Dashboard</Link>
+                <button onClick={() => { signOut(); setOpen(false) }} className="rounded-lg border border-red-400/30 px-4 py-2.5 text-sm font-black text-red-300">Sign out</button></div>
+            : <Link href="/login" onClick={() => setOpen(false)} className="btn-gold mt-3 w-full">Sign in</Link>
           }
         </div>
       )}

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { CONTACT_PHONE_DISPLAY, GOOGLE_BUSINESS_URL, pageMeta } from '@/lib/seo'
+import { CONTACT_PHONE_DISPLAY, GOOGLE_BUSINESS_URL, absoluteUrl, breadcrumbJsonLd, jsonLdGraph, pageMeta } from '@/lib/seo'
 
 export const metadata: Metadata = pageMeta({
   title:'Vehiqal Reviews - Buyer and Seller Trust',
@@ -15,9 +15,25 @@ const reviewTopics = [
   { title:'Payment confidence', text:'For inspected cars, customers can share feedback about the payment and handover experience.' },
 ]
 
+const reviewsJsonLd = jsonLdGraph([
+  {
+    '@type':'WebPage',
+    '@id':`${absoluteUrl('/reviews')}#reviews`,
+    name:'Vehiqal Reviews',
+    url:absoluteUrl('/reviews'),
+    description:'Customer feedback and review guidance for Vehiqal inspected car deals.',
+  },
+  breadcrumbJsonLd([
+    { name:'Home', path:'/' },
+    { name:'Reviews', path:'/reviews' },
+  ]),
+])
+
 export default function ReviewsPage() {
   return (
-    <div className="bg-white">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(reviewsJsonLd) }}/>
+      <div className="bg-white">
       <section className="bg-navydark px-4 py-16 text-white">
         <div className="mx-auto max-w-5xl">
           <p className="mb-3 text-sm font-black uppercase tracking-[0.22em] text-gold">Reviews</p>
@@ -64,6 +80,7 @@ export default function ReviewsPage() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   )
 }

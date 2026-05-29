@@ -175,7 +175,7 @@ export function DashboardClient() {
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${VERIFICATION_ST[car.isTrusted ? 'verified' : car.verificationStatus || 'none'] ?? VERIFICATION_ST.none}`}>{verificationLabel(car)}</span>
                   </div>
                   <p className="text-navy font-black">{formatPrice(car.price)}</p>
-                  <p className="text-gray-400 text-xs">{car.city}</p>
+                  <p className="text-gray-400 text-xs">{car.city}{car.registeredLocation ? ` · Registered: ${car.registeredLocation}` : ''}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   {car.status !== 'sold' && car.status !== 'removed' && !car.isTrusted && car.verificationStatus !== 'verified' && (
@@ -215,7 +215,7 @@ export function DashboardClient() {
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-navy text-white">Sold</span>
                   </div>
                   <p className="text-navy font-black">{formatPrice(car.price)}</p>
-                  <p className="text-gray-400 text-xs">{car.city}</p>
+                  <p className="text-gray-400 text-xs">{car.city}{car.registeredLocation ? ` · Registered: ${car.registeredLocation}` : ''}</p>
                 </div>
                 <Link href={`/cars/${car.id}`} className="text-navy font-bold text-sm hover:underline">View →</Link>
               </div>
@@ -240,7 +240,7 @@ export function DashboardClient() {
                     {car.status === 'sold' && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-navy text-white">Sold</span>}
                   </div>
                   <p className="text-navy font-black">{formatPrice(car.price)}</p>
-                  <p className="text-gray-400 text-xs">{car.city}</p>
+                  <p className="text-gray-400 text-xs">{car.city}{car.registeredLocation ? ` · Registered: ${car.registeredLocation}` : ''}</p>
                 </div>
                 <Link href={`/cars/${car.id}`} className="text-navy font-bold text-sm hover:underline">View →</Link>
               </div>

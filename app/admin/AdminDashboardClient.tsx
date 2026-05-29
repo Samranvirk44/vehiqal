@@ -749,7 +749,9 @@ export function AdminDashboardClient() {
                       {car.overallScore && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-greenlight text-green border border-green/30">Health {car.overallScore}/10</span>}
                     </div>
                     <p className="text-navy font-black">{formatPrice(car.price)}</p>
-                    <p className="text-gray-400 text-xs">{car.city} · Seller: {sellerName}</p>
+                    <p className="text-gray-400 text-xs">
+                      {car.city}{car.registeredLocation ? ` · Registered: ${car.registeredLocation}` : ''} · Seller: {sellerName}
+                    </p>
                     <p className="text-gray-600 text-sm font-semibold">
                       Seller phone:{' '}
                       {sellerPhone ? <a href={`tel:${sellerPhone}`} className="text-navy hover:underline">{sellerPhone}</a> : <span className="text-gray-400">Not saved</span>}

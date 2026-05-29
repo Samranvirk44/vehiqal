@@ -21,13 +21,15 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const title = `${car.make} ${car.model} ${car.year} for Sale in ${car.city}`
   const mileage = Number(car.mileage) > 0 ? `, ${Number(car.mileage).toLocaleString()} km` : ''
   const inspected = car.isTrusted ? ' Inspected by Vehiqal.' : ''
+  const registered = car.registeredLocation ? ` Registered in ${car.registeredLocation}.` : ''
+  const registeredKeywords = car.registeredLocation ? [`${car.registeredLocation} registered car`] : []
 
   return pageMeta({
     title,
-    description:`${car.year} ${car.make} ${car.model} in ${car.city}. ${formatPrice(car.price)}${mileage}.${inspected} Call ${CONTACT_PHONE_DISPLAY}.`,
+    description:`${car.year} ${car.make} ${car.model} in ${car.city}. ${formatPrice(car.price)}${mileage}.${registered}${inspected} Call ${CONTACT_PHONE_DISPLAY}.`,
     path:`/cars/${params.id}`,
     image:car.images?.[0] || '/opengraph-image',
-    keywords:[car.make, car.model, `${car.make} ${car.model}`, `used cars ${car.city}`, `cars for sale ${car.city}`],
+    keywords:[car.make, car.model, `${car.make} ${car.model}`, `used cars ${car.city}`, `cars for sale ${car.city}`, ...registeredKeywords],
     noIndex:car.status === 'sold',
   })
 }

@@ -180,6 +180,7 @@ export function CarDetailClient({ id }: { id: string }) {
         car.isTrusted ? { '@type':'PropertyValue', name:'Inspection status', value:'Inspected by Vehiqal' } : null,
         typeof car.overallScore === 'number' ? { '@type':'PropertyValue', name:'Inspection score', value:`${car.overallScore}/10` } : null,
         car.condition ? { '@type':'PropertyValue', name:'Condition', value:car.condition } : null,
+        car.registeredLocation ? { '@type':'PropertyValue', name:'Registered', value:car.registeredLocation } : null,
       ].filter(Boolean),
     },
     breadcrumbJsonLd([
@@ -247,6 +248,7 @@ export function CarDetailClient({ id }: { id: string }) {
             <div className="flex flex-wrap gap-2 mb-6">
               {[
                 `📍 ${car.city}`,
+                car.registeredLocation ? `Registered: ${car.registeredLocation}` : null,
                 `🔢 ${Number(car.mileage).toLocaleString()} km`,
                 `⚙️ ${car.transmission}`,
                 car.engineSize ? `🔧 ${car.engineSize}` : null,

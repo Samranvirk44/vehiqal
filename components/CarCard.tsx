@@ -102,6 +102,7 @@ export function CarCard({ car }: { car: Car }) {
         <p className="mt-1 text-lg font-black text-navy md:text-xl">{formatPrice(car.price)}</p>
         <div className="mt-3 flex flex-wrap gap-1.5 text-xs font-bold text-gray-500 md:text-sm">
           <span className="rounded-full bg-gray-50 px-2.5 py-1">{car.city}</span>
+          {car.registeredLocation && <span className="rounded-full bg-gray-50 px-2.5 py-1">Reg: {car.registeredLocation}</span>}
           <span className="rounded-full bg-gray-50 px-2.5 py-1">{Number(car.mileage).toLocaleString()} km</span>
           {car.transmission && <span className="rounded-full bg-gray-50 px-2.5 py-1">{car.transmission}</span>}
           {car.fuelType && <span className="rounded-full bg-gray-50 px-2.5 py-1">{car.fuelType}</span>}

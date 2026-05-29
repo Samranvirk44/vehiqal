@@ -32,7 +32,7 @@ export interface InspectionReport {
 export interface Car {
   id: string; make: string; model: string; year: string;
   price: number; mileage: number; city: string; transmission: string;
-  engineSize?: string; colour?: string; description?: string;
+  registeredLocation?: string; engineSize?: string; colour?: string; description?: string;
   fuelType?: string; condition?: string; assembly?: string; features?: string[];
   images: string[]; isTrusted: boolean; overallScore?: number;
   sellerId: string; sellerName?: string; sellerPhone?: string;
@@ -54,6 +54,17 @@ export const CITIES = [
   'Karachi','Islamabad','Rawalpindi','Faisalabad','Peshawar','Multan','Quetta'
 ]
 export const CITIES_WITH_ALL = ['All', ...CITIES]
+export const REGISTERED_LOCATIONS = [
+  'Punjab',
+  'Islamabad',
+  'Sindh',
+  'Karachi',
+  'Khyber Pakhtunkhwa',
+  'Balochistan',
+  'Gilgit-Baltistan',
+  'Azad Jammu and Kashmir',
+  'Other',
+]
 export const MAKES = [
   'Toyota',
   'Honda',

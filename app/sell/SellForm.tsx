@@ -4,7 +4,7 @@ import type { ChangeEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   createCar, updateCar, getCarById,
-  CITIES, MAKES, CAR_COLOURS, FUEL_TYPES, CAR_CONDITIONS, ASSEMBLY_TYPES, CAR_FEATURES,
+  CITIES, REGISTERED_LOCATIONS, MAKES, CAR_COLOURS, FUEL_TYPES, CAR_CONDITIONS, ASSEMBLY_TYPES, CAR_FEATURES,
   getCarColourOption, getCarModelOptions, normalizeCarColourName, type Car,
 } from '@/lib/cars'
 import { createUserProfile, getUserProfile, onAuthChange } from '@/lib/auth'
@@ -141,11 +141,13 @@ export function SellForm() {
   const [colourChoice, setColourChoice] = useState('')
   const [customColour, setCustomColour] = useState('')
   const [colourPickerOpen, setColourPickerOpen] = useState(false)
+  const [registeredLocationChoice, setRegisteredLocationChoice] = useState('')
+  const [customRegisteredLocation, setCustomRegisteredLocation] = useState('')
   const [customFeature, setCustomFeature] = useState('')
   const [form, setForm] = useState({
     make:'',model:'',year:'',mileage:'',transmission:'',
     fuelType:'',condition:'',assembly:'',
-    colour:'',city:'',engineSize:'',description:'',price:'',
+    colour:'',city:'',registeredLocation:'',engineSize:'',description:'',price:'',
     features:[] as string[],
   })
   const [contact, setContact] = useState({ name:'', phone:'' })
@@ -227,10 +229,13 @@ export function SellForm() {
       setMakeSearch('')
       const nextMakeChoice = findMakeChoice(car.make)
       const nextModelChoice = findModelChoice(car.make, car.model)
+      const nextRegisteredLocationChoice = findRegisteredLocationChoice(car.registeredLocation)
       setMakeChoice(nextMakeChoice)
       setCustomMake(nextMakeChoice === 'Other' ? car.make : '')
       setModelChoice(nextMakeChoice === 'Other' ? 'Other' : nextModelChoice)
       setCustomModel(nextModelChoice === 'Other' ? car.model || '' : '')
+      setRegisteredLocationChoice(nextRegisteredLocationChoice)
+      setCustomRegisteredLocation(nextRegisteredLocationChoice === 'Other' ? car.registeredLocation || '' : '')
       setColourChoice(findColourChoice(car.colour))
       if (car.colour && !getCarColourOption(car.colour)) setCustomColour(car.colour)
       setForm({
@@ -244,6 +249,7 @@ export function SellForm() {
         assembly:car.assembly || '',
         colour:car.colour || '',
         city:car.city || '',
+        registeredLocation:car.registeredLocation || '',
         engineSize:car.engineSize || '',
         description:car.description || '',
         price:car.price ? String(car.price / 100000) : '',
@@ -285,6 +291,12 @@ export function SellForm() {
     return match ?? 'Other'
   }
 
+  const findRegisteredLocationChoice = (registeredLocation?: string) => {
+    if (!registeredLocation) return ''
+    const match = REGISTERED_LOCATIONS.find(item => item.toLowerCase() === registeredLocation.trim().toLowerCase())
+    return match ?? 'Other'
+  }
+
   const handleMakeChoice = (value: string) => {
     setMakeChoice(value)
     setModelChoice(value === 'Other' ? 'Other' : '')
@@ -320,6 +332,21 @@ export function SellForm() {
   const handleCustomModel = (value: string) => {
     setCustomModel(value)
     set('model', value.trim())
+  }
+
+  const handleRegisteredLocationChoice = (value: string) => {
+    setRegisteredLocationChoice(value)
+    if (value === 'Other') {
+      set('registeredLocation', customRegisteredLocation.trim())
+      return
+    }
+    setCustomRegisteredLocation('')
+    set('registeredLocation', value)
+  }
+
+  const handleCustomRegisteredLocation = (value: string) => {
+    setCustomRegisteredLocation(value)
+    set('registeredLocation', value.trim())
   }
 
   const findColourChoice = (colour?: string) => {
@@ -424,7 +451,7 @@ export function SellForm() {
         make:form.make, model:form.model, year:form.year,
         mileage:Number(form.mileage), transmission:form.transmission as any,
         fuelType:form.fuelType, condition:form.condition, assembly:form.assembly,
-        colour:normalizeCarColourName(form.colour), city:form.city, engineSize:form.engineSize,
+        colour:normalizeCarColourName(form.colour), city:form.city, registeredLocation:form.registeredLocation, engineSize:form.engineSize,
         description:form.description, price:Number(form.price)*100000,
         features:form.features,
         sellerId:editingCar?.sellerId ?? user.uid,
@@ -528,7 +555,7 @@ export function SellForm() {
       <div className="p-6">
         {step===1 && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="relative">
                 <label className="label">Make *</label>
                 <button
@@ -638,6 +665,19 @@ export function SellForm() {
                 <select value={form.city} onChange={e=>set('city',e.target.value)} className="input">
                   <option value="">Select</option>{CITIES.map(c=><option key={c}>{c}</option>)}
                 </select></div>
+              <div><label className="label">Registered *</label>
+                <select value={registeredLocationChoice} onChange={e=>handleRegisteredLocationChoice(e.target.value)} className="input">
+                  <option value="">Select</option>{REGISTERED_LOCATIONS.map(c=><option key={c} value={c}>{c}</option>)}
+                </select>
+                {registeredLocationChoice==='Other'&&(
+                  <input
+                    value={customRegisteredLocation}
+                    onChange={e=>handleCustomRegisteredLocation(e.target.value)}
+                    placeholder="Enter registered"
+                    className="input mt-2"
+                  />
+                )}
+              </div>
               <div><label className="label">Engine size</label><input value={form.engineSize} onChange={e=>set('engineSize',e.target.value)} placeholder="e.g. 1300cc" className="input"/></div>
               <div className="relative col-span-2">
                 <label className="label">Colour</label>
@@ -756,7 +796,7 @@ export function SellForm() {
                 <div><label className="label">Contact phone *</label><input type="tel" value={contact.phone} onChange={e=>setContactField('phone',e.target.value)} placeholder="e.g. 03001234567" className="input" autoComplete="tel"/></div>
               </div>
             </div>
-            <button type="button" onClick={()=>{if(!form.make||!form.model||!form.year||!form.mileage||!form.city||!form.transmission||!form.fuelType||!form.condition||!form.assembly||!contact.name.trim()||!contact.phone.trim()){alert('Fill all required fields (*)');return}if(contact.phone.replace(/\D/g,'').length<8){alert('Enter a valid contact phone number.');return}setStep(2)}} className="btn-navy w-full justify-center">Next — Add photos →</button>
+            <button type="button" onClick={()=>{if(!form.make||!form.model||!form.year||!form.mileage||!form.city||!form.registeredLocation||!form.transmission||!form.fuelType||!form.condition||!form.assembly||!contact.name.trim()||!contact.phone.trim()){alert('Fill all required fields (*)');return}if(contact.phone.replace(/\D/g,'').length<8){alert('Enter a valid contact phone number.');return}setStep(2)}} className="btn-navy w-full justify-center">Next — Add photos →</button>
           </div>
         )}
         {step===2 && (

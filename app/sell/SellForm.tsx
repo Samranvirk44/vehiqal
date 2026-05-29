@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   createCar, updateCar, getCarById,
   CITIES, MAKES, CAR_COLOURS, FUEL_TYPES, CAR_CONDITIONS, ASSEMBLY_TYPES, CAR_FEATURES,
-  getCarColourOption, normalizeCarColourName, type Car,
+  getCarColourOption, getCarModelOptions, normalizeCarColourName, type Car,
 } from '@/lib/cars'
 import { createUserProfile, getUserProfile, onAuthChange } from '@/lib/auth'
 import { isAdminIdentity } from '@/lib/admin'
@@ -136,6 +136,8 @@ export function SellForm() {
   const [makePickerOpen, setMakePickerOpen] = useState(false)
   const [makeSearch, setMakeSearch] = useState('')
   const [customMake, setCustomMake] = useState('')
+  const [modelChoice, setModelChoice] = useState('')
+  const [customModel, setCustomModel] = useState('')
   const [colourChoice, setColourChoice] = useState('')
   const [customColour, setCustomColour] = useState('')
   const [colourPickerOpen, setColourPickerOpen] = useState(false)
@@ -223,8 +225,12 @@ export function SellForm() {
       setWantsVerification(['requested','inspecting','verified'].includes(String(car.verificationStatus)) || Boolean(car.isTrusted))
       setMakePickerOpen(false)
       setMakeSearch('')
-      setMakeChoice(findMakeChoice(car.make))
-      setCustomMake(findMakeChoice(car.make) === 'Other' ? car.make : '')
+      const nextMakeChoice = findMakeChoice(car.make)
+      const nextModelChoice = findModelChoice(car.make, car.model)
+      setMakeChoice(nextMakeChoice)
+      setCustomMake(nextMakeChoice === 'Other' ? car.make : '')
+      setModelChoice(nextMakeChoice === 'Other' ? 'Other' : nextModelChoice)
+      setCustomModel(nextModelChoice === 'Other' ? car.model || '' : '')
       setColourChoice(findColourChoice(car.colour))
       if (car.colour && !getCarColourOption(car.colour)) setCustomColour(car.colour)
       setForm({
@@ -264,6 +270,8 @@ export function SellForm() {
   const filteredMakes = MAKES
     .filter(make => make !== 'Other')
     .filter(make => make.toLowerCase().includes(makeSearch.trim().toLowerCase()))
+  const modelOptions = getCarModelOptions(form.make)
+  const modelHasDropdown = makeChoice !== 'Other' && modelOptions.length > 0
   const findFeature = (feature: string) => selectedFeatures.some(item => item.toLowerCase() === feature.toLowerCase())
 
   const findMakeChoice = (make?: string) => {
@@ -271,16 +279,24 @@ export function SellForm() {
     return MAKES.some(item => item.toLowerCase() === make.toLowerCase()) ? make : 'Other'
   }
 
+  const findModelChoice = (make?: string, model?: string) => {
+    if (!model) return ''
+    const match = getCarModelOptions(make).find(item => item.toLowerCase() === model.toLowerCase())
+    return match ?? 'Other'
+  }
+
   const handleMakeChoice = (value: string) => {
     setMakeChoice(value)
+    setModelChoice(value === 'Other' ? 'Other' : '')
+    setCustomModel('')
     if (value === 'Other') {
       setCustomMake(current => current || '')
-      set('make', customMake)
+      setForm(current => ({ ...current, make:customMake, model:'' }))
       setMakePickerOpen(false)
       return
     }
     setCustomMake('')
-    set('make', value)
+    setForm(current => ({ ...current, make:value, model:'' }))
     setMakePickerOpen(false)
     setMakeSearch('')
   }
@@ -288,6 +304,22 @@ export function SellForm() {
   const handleCustomMake = (value: string) => {
     setCustomMake(value)
     set('make', value.trim())
+  }
+
+  const handleModelChoice = (value: string) => {
+    setModelChoice(value)
+    if (value === 'Other') {
+      setCustomModel('')
+      set('model', '')
+      return
+    }
+    setCustomModel('')
+    set('model', value)
+  }
+
+  const handleCustomModel = (value: string) => {
+    setCustomModel(value)
+    set('model', value.trim())
   }
 
   const findColourChoice = (colour?: string) => {
@@ -549,7 +581,38 @@ export function SellForm() {
                   />
                 )}
               </div>
-              <div><label className="label">Model *</label><input value={form.model} onChange={e=>set('model',e.target.value)} placeholder="e.g. Corolla" className="input"/></div>
+              <div>
+                <label className="label">Model *</label>
+                {modelHasDropdown ? (
+                  <>
+                    <select
+                      value={modelChoice}
+                      onChange={e=>handleModelChoice(e.target.value)}
+                      className="input"
+                    >
+                      <option value="">Select model</option>
+                      {modelOptions.map(model => <option key={model} value={model}>{model}</option>)}
+                      <option value="Other">Other</option>
+                    </select>
+                    {modelChoice==='Other'&&(
+                      <input
+                        value={customModel}
+                        onChange={e=>handleCustomModel(e.target.value)}
+                        placeholder="Enter model / variant"
+                        className="input mt-2"
+                      />
+                    )}
+                  </>
+                ) : (
+                  <input
+                    value={form.model}
+                    onChange={e=>handleCustomModel(e.target.value)}
+                    placeholder={form.make ? 'Enter model / variant' : 'Select make first'}
+                    disabled={!form.make}
+                    className="input disabled:bg-gray-50 disabled:text-gray-400"
+                  />
+                )}
+              </div>
               <div><label className="label">Year *</label>
                 <select value={form.year} onChange={e=>set('year',e.target.value)} className="input">
                   <option value="">Select</option>{YEAR_OPTIONS.map(y=><option key={y}>{y}</option>)}

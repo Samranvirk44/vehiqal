@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
-import { clearAdminSession, hasAdminSession, isAdminIdentity, setAdminSession } from '@/lib/admin'
-import { getUserProfiles, onAuthChange } from '@/lib/auth'
-import { db } from '@/lib/firebase'
+import { browserLocalPersistence, browserSessionPersistence, setPersistence, signInWithEmailAndPassword } from 'firebase/auth'
+import { clearAdminSession, hasAdminSession, isAdminEmail, isAdminIdentity, setAdminSession } from '@/lib/admin'
+import { getUserProfiles, onAuthChange, signOut as signOutUser } from '@/lib/auth'
+import { auth, db } from '@/lib/firebase'
 import {
   INSPECTION_SECTIONS,
   calculateInspectionScore,
@@ -148,13 +148,28 @@ function draftComplete(draft: InspectionDraftSection[]) {
   })
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('timeout')), ms)
+  })
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer)
+  })
+}
+
 export function AdminDashboardClient() {
-  const router = useRouter()
   const [cars, setCars] = useState<Car[]>([])
   const [bids, setBids] = useState<Bid[]>([])
   const [profiles, setProfiles] = useState<Record<string, any>>({})
   const [currentUser, setCurrentUser] = useState<User|null>(null)
   const [authChecked, setAuthChecked] = useState(false)
+  const [adminSessionVersion, setAdminSessionVersion] = useState(0)
+  const [adminUser, setAdminUser] = useState('')
+  const [adminPass, setAdminPass] = useState('')
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true)
+  const [loginLoading, setLoginLoading] = useState(false)
+  const [loginError, setLoginError] = useState('')
   const [tab, setTab] = useState<'cars'|'verified'|'pending'|'accepted'|'rejected'|'sold'>('cars')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -162,6 +177,7 @@ export function AdminDashboardClient() {
   const [updatingCarId, setUpdatingCarId] = useState('')
   const [activeInspectionCarId, setActiveInspectionCarId] = useState('')
   const [inspectionDrafts, setInspectionDrafts] = useState<Record<string, InspectionDraftSection[]>>({})
+  const canOpenAdmin = authChecked && (hasAdminSession() || isAdminIdentity(currentUser))
 
   useEffect(() => {
     return onAuthChange((u) => {
@@ -174,9 +190,12 @@ export function AdminDashboardClient() {
   useEffect(() => {
     if (!authChecked) return
 
-    const canOpenAdmin = hasAdminSession() || isAdminIdentity(currentUser)
     if (!canOpenAdmin) {
-      router.replace('/login?admin=true')
+      setCars([])
+      setBids([])
+      setProfiles({})
+      setError('')
+      setLoading(false)
       return
     }
 
@@ -206,7 +225,7 @@ export function AdminDashboardClient() {
         const result = await response.json().catch(() => ({}))
         if (response.status === 401) {
           clearAdminSession()
-          router.replace('/login?admin=true')
+          setAdminSessionVersion(version => version + 1)
           return
         }
         if (!response.ok) {
@@ -257,7 +276,81 @@ export function AdminDashboardClient() {
     }
 
     load()
-  }, [router, authChecked, currentUser?.email, currentUser?.phoneNumber])
+  }, [canOpenAdmin, authChecked, currentUser?.email, currentUser?.phoneNumber, adminSessionVersion])
+
+  const expireAdminSession = () => {
+    clearAdminSession()
+    setCars([])
+    setBids([])
+    setProfiles({})
+    setError('Admin session expired. Sign in again.')
+    setAdminSessionVersion(version => version + 1)
+  }
+
+  const adminLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setLoginError('')
+    setLoginLoading(true)
+
+    const username = adminUser.trim() || 'admin'
+    const password = adminPass
+
+    try {
+      const normalizedUsername = username.toLowerCase()
+      const firebaseEmail = username.includes('@')
+        ? username
+        : ['admin', 'vehiqaladmin'].includes(normalizedUsername) ? 'admin.vehiqal@gmail.com' : ''
+
+      if (firebaseEmail) {
+        try {
+          await setPersistence(auth, keepLoggedIn ? browserLocalPersistence : browserSessionPersistence)
+          const credential = await withTimeout(
+            signInWithEmailAndPassword(auth, firebaseEmail, password),
+            username.includes('@') ? 10000 : 3000
+          )
+          if (!isAdminEmail(credential.user.email)) {
+            await signOutUser().catch(() => null)
+            setLoginError('This email is not allowed as admin.')
+            return
+          }
+          setAdminSession()
+          setCurrentUser(credential.user)
+          setAdminPass('')
+          setLoading(true)
+          setAdminSessionVersion(version => version + 1)
+          return
+        } catch (emailLoginError) {
+          if (username.includes('@')) throw emailLoginError
+        }
+      }
+
+      const response = await fetch('/api/admin/login', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ username, password }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setLoginError(result.error || 'Invalid admin username or password.')
+        return
+      }
+
+      setAdminSession()
+      setAdminPass('')
+      setLoading(true)
+      setAdminSessionVersion(version => version + 1)
+    } catch (loginError: any) {
+      if (loginError?.code === 'auth/invalid-credential' || loginError?.code === 'auth/user-not-found' || loginError?.code === 'auth/wrong-password') {
+        setLoginError('Invalid admin email or password.')
+      } else if (loginError?.code === 'auth/operation-not-allowed') {
+        setLoginError('Email/password login is not enabled in Firebase Auth.')
+      } else {
+        setLoginError('Could not open admin dashboard. Please try again.')
+      }
+    } finally {
+      setLoginLoading(false)
+    }
+  }
 
   const carById = useMemo(() => Object.fromEntries(cars.map(car => [car.id, car])), [cars])
   const pending = bids.filter(bid => bid.status === 'pending')
@@ -285,8 +378,7 @@ export function AdminDashboardClient() {
       })
       const result = await response.json().catch(() => ({}))
       if (response.status === 401) {
-        clearAdminSession()
-        router.replace('/login?admin=true')
+        expireAdminSession()
         return
       }
       if (!response.ok) {
@@ -319,8 +411,7 @@ export function AdminDashboardClient() {
       })
       const result = await response.json().catch(() => ({}))
       if (response.status === 401) {
-        clearAdminSession()
-        router.replace('/login?admin=true')
+        expireAdminSession()
         return
       }
       if (!response.ok) {
@@ -360,8 +451,7 @@ export function AdminDashboardClient() {
       })
       const result = await response.json().catch(() => ({}))
       if (response.status === 401) {
-        clearAdminSession()
-        router.replace('/login?admin=true')
+        expireAdminSession()
         return
       }
       if (!response.ok) {
@@ -433,8 +523,7 @@ export function AdminDashboardClient() {
         })
         const result = await response.json().catch(() => ({}))
         if (response.status === 401) {
-          clearAdminSession()
-          router.replace('/login?admin=true')
+          expireAdminSession()
           return
         }
         if (!response.ok) {
@@ -494,8 +583,7 @@ export function AdminDashboardClient() {
         })
         const result = await response.json().catch(() => ({}))
         if (response.status === 401) {
-          clearAdminSession()
-          router.replace('/login?admin=true')
+          expireAdminSession()
           return
         }
         if (!response.ok) {
@@ -523,10 +611,73 @@ export function AdminDashboardClient() {
   const logout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' }).catch(() => null)
     clearAdminSession()
-    router.replace('/login?admin=true')
+    if (isAdminIdentity(currentUser)) {
+      await signOutUser().catch(() => null)
+    }
+    setCurrentUser(null)
+    setCars([])
+    setBids([])
+    setProfiles({})
+    setError('')
+    setLoading(false)
+    setAdminSessionVersion(version => version + 1)
   }
 
-  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-navy border-t-transparent rounded-full"/></div>
+  if (!authChecked || (loading && canOpenAdmin)) return <div className="min-h-[60vh] flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-navy border-t-transparent rounded-full"/></div>
+
+  if (!canOpenAdmin) {
+    return (
+      <div className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12">
+        <div className="card w-full p-8">
+          <div className="mb-6 text-center">
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-gold">Admin only</p>
+            <h1 className="text-2xl font-black text-gray-900">Vehiqal admin sign in</h1>
+            <p className="mt-2 text-sm text-gray-500">Admin dashboard is separate from customer login.</p>
+          </div>
+          <form onSubmit={adminLogin} className="space-y-4">
+            <div>
+              <label className="label">Admin username</label>
+              <input
+                value={adminUser}
+                onChange={event => setAdminUser(event.target.value)}
+                placeholder="admin"
+                className="input"
+                autoComplete="username"
+              />
+            </div>
+            <div>
+              <label className="label">Admin password</label>
+              <input
+                type="password"
+                value={adminPass}
+                onChange={event => setAdminPass(event.target.value)}
+                placeholder="Password"
+                className="input"
+                autoComplete="current-password"
+              />
+            </div>
+            {loginError && <p className="text-sm font-semibold text-red-600">{loginError}</p>}
+            {error && <p className="text-sm font-semibold text-red-600">{error}</p>}
+            <label className="flex cursor-pointer items-center gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600">
+              <input
+                type="checkbox"
+                checked={keepLoggedIn}
+                onChange={event => setKeepLoggedIn(event.target.checked)}
+                className="accent-navy"
+              />
+              Keep me logged in on this device
+            </label>
+            <button type="submit" disabled={loginLoading} className="btn-navy w-full justify-center disabled:opacity-60">
+              {loginLoading ? 'Opening...' : 'Open admin dashboard'}
+            </button>
+          </form>
+          <Link href="/login" className="mt-5 block text-center text-sm font-bold text-navy hover:underline">
+            Customer login
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const tabs = [
     { k:'cars', l:'All cars', n:cars.length },

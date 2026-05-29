@@ -38,7 +38,12 @@ export function Navbar() {
   const logoutAdmin = async () => {
     await fetch('/api/admin/logout', { method: 'POST' }).catch(() => null)
     clearAdminSession()
+    if (isAdminIdentity(user)) {
+      await signOut().catch(() => null)
+    }
     setAdmin(false)
+    setUser(null)
+    setProfile(null)
     window.location.href = '/'
   }
 

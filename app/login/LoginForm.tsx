@@ -135,6 +135,10 @@ export function LoginForm() {
   }, [])
 
   useEffect(() => {
+    if (adminRequested) router.replace('/admin')
+  }, [adminRequested, router])
+
+  useEffect(() => {
     if (adminRequested) return
     return onAuthStateChanged(auth, (currentUser) => {
       if (currentUser && step === 'phone' && !loading) {
@@ -284,7 +288,7 @@ export function LoginForm() {
       } catch (profileError) {
         console.error('profile save after login failed:', profileError)
       }
-      if (isAdminIdentity(r.user)) setAdminSession()
+      if (adminRequested && isAdminIdentity(r.user)) setAdminSession()
       await r.user.getIdToken(true).catch(() => null)
       window.location.assign(redirect || '/dashboard')
     } catch(error:any){
@@ -297,22 +301,11 @@ export function LoginForm() {
   return (
     <div className="card p-8">
       <div id="recaptcha-container"/>
-      <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-50 p-1 mb-5">
-        <button
-          type="button"
-          onClick={()=>{setMode('phone');setError('')}}
-          className={`rounded-lg px-3 py-2 text-sm font-bold transition-colors ${mode==='phone'?'bg-white text-navy shadow-sm':'text-gray-400 hover:text-gray-700'}`}
-        >
-          User login
-        </button>
-        <button
-          type="button"
-          onClick={()=>{setMode('admin');setError('')}}
-          className={`rounded-lg px-3 py-2 text-sm font-bold transition-colors ${mode==='admin'?'bg-white text-navy shadow-sm':'text-gray-400 hover:text-gray-700'}`}
-        >
-          Admin login
-        </button>
-      </div>
+      {adminRequested ? (
+        <div className="mb-5 rounded-xl bg-navylight px-4 py-3 text-sm font-bold text-navy">
+          Opening admin sign in...
+        </div>
+      ) : null}
 
       {mode==='admin'&&(
         <form onSubmit={adminLogin} className="space-y-4">

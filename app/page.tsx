@@ -12,12 +12,16 @@ import {
   websiteJsonLd,
 } from '@/lib/seo'
 
-export const metadata: Metadata = pageMeta({
-  title:'Vehiqal - Inspected Used Cars in Pakistan',
-  description:`Buy and sell inspected used cars in Pakistan with 300-point checks, verified listings, payment support, and safer deals. Call ${CONTACT_PHONE_DISPLAY}.`,
-  path:'/',
-  keywords:['inspected used cars Pakistan','verified car deals Pakistan','buy used cars Pakistan','sell car free Pakistan'],
-})
+const homeTitle = 'Buy and Sell Used Cars in Pakistan | Vehiqal'
+export const metadata: Metadata = {
+  ...pageMeta({
+    title:homeTitle,
+    description:`Buy and sell inspected used cars in Pakistan with 300-point checks, verified listings, payment support, and safer deals. Call ${CONTACT_PHONE_DISPLAY}.`,
+    path:'/',
+    keywords:['inspected used cars Pakistan','verified car deals Pakistan','buy used cars Pakistan','sell car free Pakistan'],
+  }),
+  title:{ absolute:homeTitle },
+}
 export const revalidate = 300
 
 const faqJsonLd = {

@@ -8,8 +8,8 @@ import { CONTACT_PHONE_DISPLAY, GOOGLE_SITE_VERIFICATION, SITE_NAME, SITE_URL, a
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName:SITE_NAME,
-  title: { default: 'Used Cars for Sale in Pakistan - Buy & Sell Cars Online | Vehiqal', template: '%s | Vehiqal' },
-  description: `Buy and sell inspected used cars in Pakistan. 300-point inspection, payment support, verified buyers, and safer deals. Call ${CONTACT_PHONE_DISPLAY}.`,
+  title: { default: 'Buy and Sell Used Cars in Pakistan | Vehiqal', template: '%s | Vehiqal' },
+  description: 'Buy and sell used cars in Pakistan. Find Honda, Toyota, Suzuki and other vehicles at the best prices on Vehiqal.',
   keywords: coreKeywords,
   authors:[{ name:SITE_NAME, url:SITE_URL }],
   creator:SITE_NAME,

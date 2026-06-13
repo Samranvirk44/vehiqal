@@ -12,7 +12,7 @@ import {
   websiteJsonLd,
 } from '@/lib/seo'
 
-const homeTitle = 'Buy and Sell Used Cars in Pakistan | Vehiqal'
+const homeTitle = 'Used Cars for Sale in Pakistan - Buy & Sell Cars Online | Vehiqal'
 export const metadata: Metadata = {
   ...pageMeta({
     title:homeTitle,

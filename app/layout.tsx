@@ -8,7 +8,7 @@ import { CONTACT_PHONE_DISPLAY, GOOGLE_SITE_VERIFICATION, SITE_NAME, SITE_URL, a
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName:SITE_NAME,
-  title: { default: 'Buy and Sell Used Cars in Pakistan | Vehiqal', template: '%s | Vehiqal' },
+  title: { default: 'Used Cars for Sale in Pakistan - Buy & Sell Cars Online | Vehiqal', template: '%s | Vehiqal' },
   description: `Buy and sell inspected used cars in Pakistan. 300-point inspection, payment support, verified buyers, and safer deals. Call ${CONTACT_PHONE_DISPLAY}.`,
   keywords: coreKeywords,
   authors:[{ name:SITE_NAME, url:SITE_URL }],
@@ -25,13 +25,13 @@ export const metadata: Metadata = {
   verification:{ google:GOOGLE_SITE_VERIFICATION },
   openGraph: {
     type:'website', locale:'en_PK', url:SITE_URL, siteName:SITE_NAME,
-    title:'Buy and Sell Used Cars in Pakistan | Vehiqal',
+    title:'Used Cars for Sale in Pakistan - Buy & Sell Cars Online | Vehiqal',
     description:'We take your headache. 300-point inspections, verified listings, and safer car deals.',
     images:[{ url:'/opengraph-image', width:1200, height:630, alt:'Vehiqal inspected car marketplace' }],
   },
   twitter:{
     card:'summary_large_image',
-    title:'Buy and Sell Used Cars in Pakistan | Vehiqal',
+    title:'Used Cars for Sale in Pakistan - Buy & Sell Cars Online | Vehiqal',
     description:'Browse inspected cars or list your car free with Vehiqal.',
     images:['/opengraph-image'],
   },

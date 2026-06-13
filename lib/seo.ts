@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 
 export const SITE_NAME = 'Vehiqal'
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://vehiqal.com'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.vehiqal.com'
+export const GOOGLE_SITE_VERIFICATION = 'k2IKOd50NK6MjfrSRJPMVyzHiOwQPOWMPHhpv0_nDqI'
 export const CONTACT_PHONE_DISPLAY = '0303 4642619'
 export const CONTACT_PHONE_TEL = '+923034642619'
 export const CONTACT_WHATSAPP = '923034642619'
@@ -65,7 +66,13 @@ export function pageMeta({
     title,
     description,
     keywords:[...coreKeywords, ...keywords],
-    alternates:{ canonical:url },
+    alternates:{
+      canonical:url,
+      languages:{
+        'en-PK':url,
+        'x-default':url,
+      },
+    },
     openGraph:{
       title,
       description,

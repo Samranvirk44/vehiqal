@@ -39,7 +39,7 @@ export interface Car {
   status?: CarStatus | string; verificationStatus?: VerificationStatus | string;
   inspectionReport?: InspectionReport;
   verificationRequestedAt?: any; verifiedAt?: any; verifiedBy?: string;
-  createdAt?: any;
+  createdAt?: any; updatedAt?: any;
 }
 
 export interface Bid {

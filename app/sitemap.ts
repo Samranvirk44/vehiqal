@@ -1,7 +1,18 @@
 import { MetadataRoute } from 'next'
 import { absoluteUrl, citySlug, SERVICE_AREAS } from '@/lib/seo'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
+
+const IMPORTANT_PAGES = [
+  { path:'/', changeFrequency:'daily', priority:1 },
+  { path:'/cars', changeFrequency:'hourly', priority:0.9 },
+  { path:'/sell', changeFrequency:'weekly', priority:0.8 },
+  { path:'/about', changeFrequency:'monthly', priority:0.7 },
+  { path:'/contact', changeFrequency:'monthly', priority:0.75 },
+  { path:'/reviews', changeFrequency:'monthly', priority:0.65 },
+  { path:'/privacy', changeFrequency:'yearly', priority:0.4 },
+  { path:'/terms', changeFrequency:'yearly', priority:0.4 },
+] as const
 
 type SitemapCar = {
   id: string
@@ -32,7 +43,7 @@ async function getSitemapCars(): Promise<SitemapCar[]> {
     url.searchParams.set('key', apiKey)
     if (pageToken) url.searchParams.set('pageToken', pageToken)
 
-    const response = await fetch(url, { cache:'no-store' })
+    const response = await fetch(url, { next:{ revalidate } })
     if (!response.ok) throw new Error(`Firestore sitemap request failed: ${response.status}`)
 
     const data = await response.json() as {
@@ -83,14 +94,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const staticUrls = [
-    { url:absoluteUrl('/'), changeFrequency:'daily' as const, priority:1 },
-    { url:absoluteUrl('/cars'), changeFrequency:'hourly' as const, priority:0.9 },
-    { url:absoluteUrl('/sell'), changeFrequency:'weekly' as const, priority:0.8 },
-    { url:absoluteUrl('/about'), changeFrequency:'monthly' as const, priority:0.7 },
-    { url:absoluteUrl('/contact'), changeFrequency:'monthly' as const, priority:0.75 },
-    { url:absoluteUrl('/reviews'), changeFrequency:'monthly' as const, priority:0.65 },
-    { url:absoluteUrl('/privacy'), changeFrequency:'yearly' as const, priority:0.4 },
-    { url:absoluteUrl('/terms'), changeFrequency:'yearly' as const, priority:0.4 },
+    ...IMPORTANT_PAGES.map(page => ({
+      url:absoluteUrl(page.path),
+      changeFrequency:page.changeFrequency,
+      priority:page.priority,
+    })),
     ...SERVICE_AREAS.flatMap(city => [
       { url:absoluteUrl(`/cars-for-sale-${citySlug(city)}`), changeFrequency:'daily' as const, priority:0.85 },
       { url:absoluteUrl(`/sell-car-${citySlug(city)}`), changeFrequency:'monthly' as const, priority:0.7 },

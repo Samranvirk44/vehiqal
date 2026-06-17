@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { updateDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { browserLocalPersistence, browserSessionPersistence, setPersistence, signInWithEmailAndPassword } from 'firebase/auth'
@@ -743,7 +744,7 @@ export function AdminDashboardClient() {
               <div key={car.id} className="card p-4">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                   <div className="w-20 h-16 rounded-xl bg-navylight flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
-                    {car.images?.[0] ? <img src={car.images[0]} alt={carImageAlt(car)} loading="lazy" className="h-full w-full object-cover"/> : '🚗'}
+                    {car.images?.[0] ? <Image src={car.images[0]} alt={carImageAlt(car)} width={80} height={64} sizes="80px" quality={45} className="h-full w-full object-cover"/> : '🚗'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

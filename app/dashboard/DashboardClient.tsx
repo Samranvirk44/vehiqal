@@ -170,7 +170,7 @@ export function DashboardClient() {
             :listings.map(car=>(
               <div key={car.id} className="card p-4 flex items-center gap-4">
                 <div className="w-20 h-16 rounded-xl overflow-hidden bg-navylight flex-shrink-0">
-                  {car.images?.[0]?<Image src={car.images[0]} alt={carImageAlt(car, 'my listing thumbnail')} width={80} height={64} quality={45} className="object-cover w-full h-full"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🚗</div>}
+                  {car.images?.[0]?<Image src={car.images[0]} alt={carImageAlt(car, 'my listing thumbnail')} width={80} height={64} sizes="80px" quality={45} className="object-cover w-full h-full"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🚗</div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -211,7 +211,7 @@ export function DashboardClient() {
             :soldListings.map(car=>(
               <div key={car.id} className="card p-4 flex items-center gap-4 border-navy/10">
                 <div className="w-20 h-16 rounded-xl overflow-hidden bg-navylight flex-shrink-0">
-                  {car.images?.[0]?<Image src={car.images[0]} alt={carImageAlt(car, 'sold listing thumbnail')} width={80} height={64} quality={45} className="object-cover w-full h-full"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🚗</div>}
+                  {car.images?.[0]?<Image src={car.images[0]} alt={carImageAlt(car, 'sold listing thumbnail')} width={80} height={64} sizes="80px" quality={45} className="object-cover w-full h-full"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🚗</div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -235,7 +235,7 @@ export function DashboardClient() {
             :favouriteCars.map(car=>(
               <div key={car.id} className="card p-4 flex items-center gap-4">
                 <div className="w-20 h-16 rounded-xl overflow-hidden bg-navylight flex-shrink-0">
-                  {car.images?.[0]?<Image src={car.images[0]} alt={carImageAlt(car, 'favourite car thumbnail')} width={80} height={64} quality={45} className="object-cover w-full h-full"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🚗</div>}
+                  {car.images?.[0]?<Image src={car.images[0]} alt={carImageAlt(car, 'favourite car thumbnail')} width={80} height={64} sizes="80px" quality={45} className="object-cover w-full h-full"/>:<div className="w-full h-full flex items-center justify-center text-2xl">🚗</div>}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">

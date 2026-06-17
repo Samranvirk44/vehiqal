@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   createCar, updateCar, getCarById,
@@ -811,7 +812,7 @@ export function SellForm() {
             <div className="mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-navylight">
               {previews[selectedPhotoIndex] ? (
                 <div className="relative aspect-[16/10]">
-                  <img src={previews[selectedPhotoIndex]} alt={vehiclePhotoAlt(selectedPhotoIndex, 'selected listing photo')} className="h-full w-full object-contain"/>
+                  <Image src={previews[selectedPhotoIndex]} alt={vehiclePhotoAlt(selectedPhotoIndex, 'selected listing photo')} fill sizes="(max-width: 768px) 100vw, 672px" unoptimized className="object-contain"/>
                   {selectedPhotoIndex===0&&<span className="absolute left-3 top-3 bg-gold text-yellow-900 text-xs font-black px-2.5 py-1 rounded-full">Cover photo</span>}
                 </div>
               ) : (
@@ -825,7 +826,7 @@ export function SellForm() {
             <div className="grid grid-cols-4 gap-3 mb-4">
               {previews.map((src,i)=>(
                 <button key={i} type="button" onClick={()=>setSelectedPhotoIndex(i)} className={`relative aspect-square overflow-hidden rounded-xl border text-left transition-all ${selectedPhotoIndex===i?'border-navy ring-2 ring-navy/20':'border-gray-200 hover:border-navy/40'}`}>
-                  <img src={src} alt={vehiclePhotoAlt(i, 'listing thumbnail photo')} className="h-full w-full object-contain bg-navylight"/>
+                  <Image src={src} alt={vehiclePhotoAlt(i, 'listing thumbnail photo')} fill sizes="(max-width: 768px) 25vw, 160px" unoptimized className="object-contain bg-navylight"/>
                   {i===0&&<span className="absolute top-1 left-1 bg-gold text-yellow-900 text-xs font-bold px-1.5 py-0.5 rounded">Cover</span>}
                   <span onClick={(event)=>{event.stopPropagation();removePhoto(i)}} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">✕</span>
                 </button>

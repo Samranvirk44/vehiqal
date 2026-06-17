@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getCarById, getCars, formatPrice, getCarColourOption, type Car } from '@/lib/cars'
 import { createUserProfile, getUserProfile, onAuthChange } from '@/lib/auth'
-import { absoluteUrl, breadcrumbJsonLd, jsonLdGraph } from '@/lib/seo'
+import { absoluteUrl } from '@/lib/seo'
 import { BidForm } from './BidForm'
 import type { User } from 'firebase/auth'
 
@@ -142,58 +142,9 @@ export function CarDetailClient({ id }: { id: string }) {
   const carUrl = absoluteUrl(`/cars/${car.id}`)
   const carName = `${car.make} ${car.model} ${car.year}`
   const carImageAlt = `${car.year} ${car.make} ${car.model} for sale in ${car.city}`
-  const jsonLd = jsonLdGraph([
-    {
-      '@type':['Product','Vehicle'],
-      '@id':`${carUrl}#vehicle`,
-      name:carName,
-      brand:{ '@type':'Brand', name:car.make },
-      model:car.model,
-      vehicleModelDate:car.year,
-      mileageFromOdometer:{
-        '@type':'QuantitativeValue',
-        value:car.mileage,
-        unitCode:'KMT',
-      },
-      fuelType:car.fuelType,
-      vehicleTransmission:car.transmission,
-      vehicleConfiguration:car.assembly,
-      color:car.colour,
-      sku:car.id,
-      description:car.description || `${carName} in ${car.city}. ${car.isTrusted ? 'Inspected by Vehiqal.' : 'Used car listing on Vehiqal.'}`,
-      image:images,
-      url:carUrl,
-      itemCondition:car.condition?.toLowerCase().includes('new') ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
-      offers:{
-        '@type':'Offer',
-        '@id':`${carUrl}#offer`,
-        url:carUrl,
-        priceCurrency:'PKR',
-        price:car.price,
-        availability:car.status === 'sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
-        seller:{
-          '@type':'Organization',
-          name:car.isTrusted ? 'Vehiqal' : (car.sellerName || 'Vehiqal seller'),
-          telephone:contactPhone || undefined,
-        },
-      },
-      additionalProperty:[
-        car.isTrusted ? { '@type':'PropertyValue', name:'Inspection status', value:'Inspected by Vehiqal' } : null,
-        typeof car.overallScore === 'number' ? { '@type':'PropertyValue', name:'Inspection score', value:`${car.overallScore}/10` } : null,
-        car.condition ? { '@type':'PropertyValue', name:'Condition', value:car.condition } : null,
-        car.registeredLocation ? { '@type':'PropertyValue', name:'Registered', value:car.registeredLocation } : null,
-      ].filter(Boolean),
-    },
-    breadcrumbJsonLd([
-      { name:'Home', path:'/' },
-      { name:'Cars', path:'/cars' },
-      { name:carName, path:`/cars/${car.id}` },
-    ]),
-  ])
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(jsonLd) }}/>
       <div className="max-w-6xl mx-auto px-4 py-8">
         <nav className="text-sm text-gray-400 mb-6 flex items-center gap-2 flex-wrap">
           <Link href="/" className="hover:text-navy">Home</Link><span>/</span>

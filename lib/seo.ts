@@ -154,13 +154,42 @@ export function businessJsonLd() {
   }
 }
 
+export function organizationJsonLd() {
+  return {
+    '@type':'Organization',
+    '@id':absoluteUrl('/#organization'),
+    name:SITE_NAME,
+    legalName:SITE_NAME,
+    url:absoluteUrl('/'),
+    logo:absoluteUrl('/icon'),
+    image:absoluteUrl('/opengraph-image'),
+    email:CONTACT_EMAIL,
+    telephone:CONTACT_PHONE_TEL,
+    description:'Vehiqal is a used car marketplace in Pakistan for buying and selling vehicles with verified listings, inspection support, and safer deal assistance.',
+    areaServed:{
+      '@type':'Country',
+      name:'Pakistan',
+    },
+    contactPoint:[
+      {
+        '@type':'ContactPoint',
+        telephone:CONTACT_PHONE_TEL,
+        contactType:'customer support',
+        areaServed:'PK',
+        availableLanguage:['English','Urdu','Punjabi'],
+      },
+    ],
+    sameAs:[FACEBOOK_URL, ...(GOOGLE_BUSINESS_URL ? [GOOGLE_BUSINESS_URL] : [])],
+  }
+}
+
 export function websiteJsonLd() {
   return {
     '@type':'WebSite',
     '@id':absoluteUrl('/#website'),
     name:SITE_NAME,
     url:absoluteUrl('/'),
-    publisher:{ '@id':absoluteUrl('/#business') },
+    publisher:{ '@id':absoluteUrl('/#organization') },
     potentialAction:{
       '@type':'SearchAction',
       target:`${absoluteUrl('/cars')}?make={search_term_string}`,

@@ -8,6 +8,7 @@ import {
   SERVICE_AREAS,
   businessJsonLd,
   jsonLdGraph,
+  organizationJsonLd,
   pageMeta,
   websiteJsonLd,
 } from '@/lib/seo'
@@ -67,6 +68,7 @@ const faqJsonLd = {
 }
 
 const homeJsonLd = jsonLdGraph([
+  organizationJsonLd(),
   businessJsonLd(),
   websiteJsonLd(),
   faqJsonLd,

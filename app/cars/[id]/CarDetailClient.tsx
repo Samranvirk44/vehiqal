@@ -141,6 +141,7 @@ export function CarDetailClient({ id }: { id: string }) {
   const inspectionSections = car.inspectionReport?.sections ?? []
   const carUrl = absoluteUrl(`/cars/${car.id}`)
   const carName = `${car.make} ${car.model} ${car.year}`
+  const carImageAlt = `${car.year} ${car.make} ${car.model} for sale in ${car.city}`
   const jsonLd = jsonLdGraph([
     {
       '@type':['Product','Vehicle'],
@@ -207,7 +208,7 @@ export function CarDetailClient({ id }: { id: string }) {
                   <div className="relative h-72 md:h-96">
                     <Image
                       src={selectedImage}
-                      alt={`${car.make} ${car.model} ${car.year}`}
+                      alt={`${carImageAlt} - main vehicle photo`}
                       fill
                       priority
                       sizes="(max-width: 1024px) 100vw, 760px"
@@ -228,7 +229,7 @@ export function CarDetailClient({ id }: { id: string }) {
                     onClick={() => setSelectedImageIndex(i)}
                     className={`relative h-20 rounded-xl overflow-hidden bg-navylight border transition-all ${selectedImageIndex===i?'border-navy ring-2 ring-navy/20':'border-transparent hover:border-navy/40'}`}
                   >
-                    <Image src={img} alt="" fill sizes="120px" quality={45} className="object-cover"/>
+                    <Image src={img} alt={`${carImageAlt} - thumbnail photo ${i + 1}`} fill sizes="120px" quality={45} className="object-cover"/>
                   </button>
                 ))}
               </div>

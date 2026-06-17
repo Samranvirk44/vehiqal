@@ -11,6 +11,7 @@ export function CarCard({ car }: { car: Car }) {
   const swipeStartX = useRef<number | null>(null)
   const image = images[photoIndex] ?? null
   const colourOption = getCarColourOption(car.colour)
+  const imageAlt = `${car.year} ${car.make} ${car.model} for sale in ${car.city} - vehicle photo ${photoIndex + 1}`
 
   const movePhoto = (direction: -1 | 1) => {
     if (images.length < 2) return
@@ -41,7 +42,7 @@ export function CarCard({ car }: { car: Car }) {
           ? (
             <Image
               src={image}
-              alt={`${car.make} ${car.model} ${car.year}`}
+              alt={imageAlt}
               fill
               sizes="(max-width: 640px) 280px, (max-width: 1024px) 33vw, 315px"
               quality={55}

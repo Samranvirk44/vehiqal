@@ -12,15 +12,31 @@ import {
   websiteJsonLd,
 } from '@/lib/seo'
 
-const homeTitle = 'Used Cars for Sale in Pakistan - Buy & Sell Cars Online | Vehiqal'
+const homeTitle = 'Buy and Sell Used Cars in Pakistan | Vehiqal'
+const homeDescription = 'Buy and sell used cars in Pakistan. Find Honda, Toyota, Suzuki and other vehicles at the best prices on Vehiqal.'
 export const metadata: Metadata = {
   ...pageMeta({
     title:homeTitle,
-    description:`Buy and sell inspected used cars in Pakistan with 300-point checks, verified listings, payment support, and safer deals. Call ${CONTACT_PHONE_DISPLAY}.`,
+    description:homeDescription,
     path:'/',
     keywords:['inspected used cars Pakistan','verified car deals Pakistan','buy used cars Pakistan','sell car free Pakistan'],
   }),
   title:{ absolute:homeTitle },
+  openGraph:{
+    title:homeTitle,
+    description:homeDescription,
+    url:'https://vehiqal.com',
+    siteName:'Vehiqal',
+    locale:'en_PK',
+    type:'website',
+    images:[{ url:'https://www.vehiqal.com/opengraph-image', width:1200, height:630, alt:'Vehiqal inspected car marketplace' }],
+  },
+  twitter:{
+    card:'summary_large_image',
+    title:homeTitle,
+    description:homeDescription,
+    images:['https://www.vehiqal.com/opengraph-image'],
+  },
 }
 export const revalidate = 300
 

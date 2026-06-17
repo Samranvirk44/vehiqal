@@ -157,8 +157,9 @@ export function SellForm() {
   const previews = [...existingImages, ...filePreviews]
   const vehiclePhotoAlt = (index: number, label = 'vehicle photo') => {
     const vehicleName = [form.year, form.make, form.model].filter(Boolean).join(' ') || 'Vehicle'
+    const color = form.colour || 'unknown color'
     const location = form.city ? ` in ${form.city}` : ''
-    return `${vehicleName}${location} - ${label} ${index + 1}`
+    return `${vehicleName} in ${color}${location} - ${label} ${index + 1}`
   }
   useEffect(() => {
     return onAuthChange(async (u) => {

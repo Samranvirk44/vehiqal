@@ -63,7 +63,7 @@ function statusLabel(status?: string) {
 }
 
 function carImageAlt(car: Car) {
-  return `${car.year} ${car.make} ${car.model} for sale in ${car.city} - admin listing thumbnail`
+  return `${car.year} ${car.make} ${car.model} in ${car.colour || 'unknown color'} for sale in ${car.city} - admin listing thumbnail`
 }
 
 function bidStatusLabel(bid: Bid) {

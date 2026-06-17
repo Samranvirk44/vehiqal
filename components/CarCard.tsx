@@ -11,7 +11,7 @@ export function CarCard({ car }: { car: Car }) {
   const swipeStartX = useRef<number | null>(null)
   const image = images[photoIndex] ?? null
   const colourOption = getCarColourOption(car.colour)
-  const imageAlt = `${car.year} ${car.make} ${car.model} for sale in ${car.city} - vehicle photo ${photoIndex + 1}`
+  const imageAlt = `${car.year} ${car.make} ${car.model} in ${colourOption?.name || car.colour || 'unknown color'} for sale in ${car.city} - vehicle photo ${photoIndex + 1}`
 
   const movePhoto = (direction: -1 | 1) => {
     if (images.length < 2) return

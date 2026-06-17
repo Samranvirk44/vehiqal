@@ -141,7 +141,7 @@ export function CarDetailClient({ id }: { id: string }) {
   const inspectionSections = car.inspectionReport?.sections ?? []
   const carUrl = absoluteUrl(`/cars/${car.id}`)
   const carName = `${car.make} ${car.model} ${car.year}`
-  const carImageAlt = `${car.year} ${car.make} ${car.model} for sale in ${car.city}`
+  const carImageAlt = `${car.year} ${car.make} ${car.model} in ${colourOption?.name || car.colour || 'unknown color'} for sale in ${car.city}`
 
   return (
     <>

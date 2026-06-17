@@ -35,7 +35,7 @@ function titleCase(value?: string) {
 }
 
 function carImageAlt(car: Car, context: string) {
-  return `${car.year} ${car.make} ${car.model} for sale in ${car.city} - ${context}`
+  return `${car.year} ${car.make} ${car.model} in ${car.colour || 'unknown color'} for sale in ${car.city} - ${context}`
 }
 
 function bidStatusLabel(bid: Bid) {

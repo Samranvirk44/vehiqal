@@ -3,7 +3,7 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { CityCarsPage } from '@/components/CityCarsPage'
 import { SellForm } from '@/app/sell/SellForm'
-import { SERVICE_AREAS, cityCarsMeta, citySlug, sellCityMeta } from '@/lib/seo'
+import { SERVICE_AREAS, cityCarsMeta, citySlug, pageMeta, sellCityMeta } from '@/lib/seo'
 
 const cityBySlug = Object.fromEntries(
   SERVICE_AREAS.map(city => [citySlug(city), city])
@@ -33,7 +33,12 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
     return sellCityMeta(sellCity)
   }
 
-  return { robots:{ index:false, follow:false } }
+  return pageMeta({
+    title:'Page Not Found - Vehiqal',
+    description:'This Vehiqal page could not be found.',
+    path:`/${params.slug}`,
+    noIndex:true,
+  })
 }
 
 export default async function CityRoutePage({ params }: { params: { slug: string } }) {

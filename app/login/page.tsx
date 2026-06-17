@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { LoginForm } from './LoginForm'
 import { VehiqalIcon } from '@/components/VehiqalLogo'
+import { pageMeta } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title:'Sign in - Vehiqal',
   description:'Sign in to your Vehiqal account.',
-  robots:{ index:false, follow:false },
-}
+  path:'/login',
+  noIndex:true,
+})
 
 export default function LoginPage() {
   return (

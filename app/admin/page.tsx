@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import { AdminDashboardClient } from './AdminDashboardClient'
+import { pageMeta } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title:'Admin - Vehiqal',
-  robots:{ index:false, follow:false },
-}
+  description:'Vehiqal admin dashboard.',
+  path:'/admin',
+  noIndex:true,
+})
 
 export default function AdminPage() {
   return <AdminDashboardClient />

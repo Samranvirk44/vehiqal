@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { CarDetailClient } from './CarDetailClient'
 import { formatPrice, type Car } from '@/lib/cars'
-import { CONTACT_PHONE_DISPLAY, absoluteUrl, breadcrumbJsonLd, jsonLdGraph, organizationJsonLd, pageMeta } from '@/lib/seo'
+import { CONTACT_PHONE_DISPLAY, absoluteUrl, breadcrumbJsonLd, citySlug, jsonLdGraph, organizationJsonLd, pageMeta } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -21,6 +22,30 @@ function fieldString(fields: Record<string, FirestoreValue> | undefined, key: st
 function fieldNumber(fields: Record<string, FirestoreValue> | undefined, key: string) {
   const value = fields?.[key]
   return Number(value?.integerValue ?? value?.doubleValue ?? 0)
+}
+
+function carFromFirestore(id: string, fields: Record<string, FirestoreValue> | undefined): Car {
+  return {
+    id,
+    make:fieldString(fields, 'make'),
+    model:fieldString(fields, 'model'),
+    year:fieldString(fields, 'year'),
+    price:fieldNumber(fields, 'price'),
+    mileage:fieldNumber(fields, 'mileage'),
+    city:fieldString(fields, 'city'),
+    transmission:fieldString(fields, 'transmission'),
+    registeredLocation:fieldString(fields, 'registeredLocation') || undefined,
+    fuelType:fieldString(fields, 'fuelType') || undefined,
+    assembly:fieldString(fields, 'assembly') || undefined,
+    colour:fieldString(fields, 'colour') || undefined,
+    condition:fieldString(fields, 'condition') || undefined,
+    sellerName:fieldString(fields, 'sellerName') || undefined,
+    sellerPhone:fieldString(fields, 'sellerPhone') || undefined,
+    overallScore:fieldNumber(fields, 'overallScore') || undefined,
+    images:fields?.images?.arrayValue?.values?.map(value => value.stringValue ?? '').filter(Boolean) ?? [],
+    isTrusted:Boolean(fields?.isTrusted?.booleanValue),
+    status:fieldString(fields, 'status') || undefined,
+  } as Car
 }
 
 function seoPrice(value: number) {
@@ -53,30 +78,90 @@ async function getCarForMetadata(id: string): Promise<Car | null> {
     }
     const fields = document.fields
 
-    return {
-      id,
-      make:fieldString(fields, 'make'),
-      model:fieldString(fields, 'model'),
-      year:fieldString(fields, 'year'),
-      price:fieldNumber(fields, 'price'),
-      mileage:fieldNumber(fields, 'mileage'),
-      city:fieldString(fields, 'city'),
-      transmission:fieldString(fields, 'transmission'),
-      registeredLocation:fieldString(fields, 'registeredLocation') || undefined,
-      fuelType:fieldString(fields, 'fuelType') || undefined,
-      assembly:fieldString(fields, 'assembly') || undefined,
-      colour:fieldString(fields, 'colour') || undefined,
-      condition:fieldString(fields, 'condition') || undefined,
-      sellerName:fieldString(fields, 'sellerName') || undefined,
-      sellerPhone:fieldString(fields, 'sellerPhone') || undefined,
-      overallScore:fieldNumber(fields, 'overallScore') || undefined,
-      images:fields?.images?.arrayValue?.values?.map(value => value.stringValue ?? '').filter(Boolean) ?? [],
-      isTrusted:Boolean(fields?.isTrusted?.booleanValue),
-      status:fieldString(fields, 'status') || undefined,
-    } as Car
+    return carFromFirestore(id, fields)
   } catch {
     return null
   }
+}
+
+async function getRelatedCars(car: Car): Promise<Car[]> {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
+  if (!projectId || !apiKey) return []
+
+  try {
+    const url = new URL(
+      `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/cars`
+    )
+    url.searchParams.set('pageSize', '100')
+    url.searchParams.set('key', apiKey)
+
+    const response = await fetch(url, { cache:'no-store' })
+    if (!response.ok) return []
+
+    const data = await response.json() as {
+      documents?: Array<{
+        name: string
+        fields?: Record<string, FirestoreValue>
+      }>
+    }
+
+    return (data.documents ?? [])
+      .map(document => carFromFirestore(document.name.split('/').pop() ?? '', document.fields))
+      .filter(item => item.id && item.id !== car.id && item.status !== 'removed')
+      .sort((a, b) => {
+        const aScore = Number(a.make === car.make) * 4 + Number(a.city === car.city) * 3 + Number(a.isTrusted)
+        const bScore = Number(b.make === car.make) * 4 + Number(b.city === car.city) * 3 + Number(b.isTrusted)
+        return bScore - aScore
+      })
+      .slice(0, 6)
+  } catch {
+    return []
+  }
+}
+
+function RelatedCarsSection({ car, relatedCars }: { car: Car; relatedCars: Car[] }) {
+  if (relatedCars.length === 0) return null
+
+  return (
+    <section className="mx-auto max-w-6xl px-4 pb-12">
+      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm md:p-6">
+        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-gold">Related cars</p>
+            <h2 className="mt-2 text-2xl font-black text-gray-900">More cars like this {car.make} {car.model}</h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Compare similar used cars by make, city, year, price, and inspection status.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm font-black">
+            <Link href={`/cars?make=${encodeURIComponent(car.make)}`} className="rounded-lg bg-navylight px-3 py-2 text-navy hover:bg-blue-50">
+              More {car.make} cars
+            </Link>
+            <Link href={`/cars-for-sale-${citySlug(car.city)}`} className="rounded-lg bg-navylight px-3 py-2 text-navy hover:bg-blue-50">
+              Cars in {car.city}
+            </Link>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {relatedCars.map(related => (
+            <Link
+              key={related.id}
+              href={`/cars/${related.id}`}
+              className="rounded-xl border border-gray-100 bg-gray-50 p-4 transition hover:border-navy/20 hover:bg-white hover:shadow-sm"
+            >
+              <h3 className="font-black text-gray-900">{related.year} {related.make} {related.model}</h3>
+              <p className="mt-1 text-sm font-black text-navy">{seoPrice(related.price)}</p>
+              <p className="mt-2 text-xs font-semibold text-gray-500">
+                {related.city}{related.colour ? ` · ${related.colour}` : ''}{Number(related.mileage) > 0 ? ` · ${Number(related.mileage).toLocaleString()} km` : ''}
+              </p>
+              {related.isTrusted && <p className="mt-2 text-xs font-black text-green">Inspected by Vehiqal</p>}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 function carJsonLd(car: Car) {
@@ -193,6 +278,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
 export default async function CarDetailPage({ params }: { params: { id: string } }) {
   const car = await getCarForMetadata(params.id)
+  const relatedCars = car && car.status !== 'removed' ? await getRelatedCars(car) : []
 
   return (
     <>
@@ -200,6 +286,7 @@ export default async function CarDetailPage({ params }: { params: { id: string }
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html:JSON.stringify(carJsonLd(car)) }}/>
       )}
       <CarDetailClient id={params.id} />
+      {car && car.status !== 'removed' && <RelatedCarsSection car={car} relatedCars={relatedCars} />}
     </>
   )
 }

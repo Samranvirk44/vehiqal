@@ -138,37 +138,6 @@ export default function HomePage() {
             <HeroSearch />
           </div>
 
-          {/* CTA buttons */}
-          <div className="mb-4 mx-auto flex w-full max-w-xl flex-col items-stretch gap-3 md:mb-5">
-            <Link href="/sell"
-              className="group flex min-h-[76px] w-full items-center justify-between gap-4 rounded-[16px] bg-[linear-gradient(135deg,#FF9800_0%,#FFB300_100%)] p-[20px_24px] text-left text-yellow-950 shadow-[0_18px_38px_rgba(255,152,0,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(255,152,0,0.38)]">
-              <span className="flex min-w-0 items-center gap-4">
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-yellow-950 shadow-inner shadow-white/20">
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 17h14" />
-                    <path d="M6 17v-5l2.1-4.2A3 3 0 0 1 10.8 6h2.4a3 3 0 0 1 2.7 1.8L18 12v5" />
-                    <path d="M7 12h10" />
-                    <circle cx="7.5" cy="17" r="1.5" />
-                    <circle cx="16.5" cy="17" r="1.5" />
-                  </svg>
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[22px] font-bold leading-none">Sell your car free</span>
-                  <span className="mt-1 block text-[14px] font-medium leading-tight text-yellow-950/80">List your car in minutes and reach serious buyers.</span>
-                </span>
-              </span>
-              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20 transition-transform duration-200 group-hover:translate-x-1">
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" />
-                  <path d="m13 6 6 6-6 6" />
-                </svg>
-              </span>
-            </Link>
-            <Link href="/cars" className="flex w-full items-center justify-center rounded-[16px] border border-white/35 px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:border-white/60 hover:bg-white/8">
-              Browse verified cars
-            </Link>
-          </div>
-
           {/* Trust pills */}
           <div className="flex flex-wrap justify-center gap-3">
             {[
@@ -191,7 +160,61 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══ STATS — cities covered, not cars ══ */}
+      {/* Primary homepage CTAs */}
+      <section className="bg-navydark px-4 py-6 md:py-8">
+        <div className="fade-up-3 mx-auto flex w-full max-w-6xl flex-col items-stretch gap-4">
+          <Link href="/sell"
+            className="group relative flex h-[90px] w-full items-center overflow-hidden rounded-[18px] bg-[linear-gradient(135deg,#FF9800_0%,#FFB300_100%)] p-[20px_24px] pr-16 text-left text-yellow-950 shadow-[0_24px_54px_rgba(255,152,0,0.32),0_10px_24px_rgba(4,12,24,0.24)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_68px_rgba(255,152,0,0.42),0_14px_32px_rgba(4,12,24,0.3)] md:h-auto md:min-h-[104px] md:pr-[88px]">
+            <span className="flex min-w-0 items-center gap-2 md:gap-5">
+              <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-white text-yellow-950 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.7),0_12px_24px_rgba(120,75,0,0.18)] md:h-16 md:w-16">
+                <svg aria-hidden="true" viewBox="0 0 64 64" className="h-11 w-11 md:h-12 md:w-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 38h40l-3.8-11.4A8 8 0 0 0 40.6 21H25.5a8 8 0 0 0-7.4 5L12 38Z" fill="#FFB300"/>
+                  <path d="M18.4 32.2 21 26.7A5 5 0 0 1 25.5 24h15.1a5 5 0 0 1 4.7 3.4l1.6 4.8H18.4Z" fill="#FFE4A3"/>
+                  <path d="M10 36.5h44a4 4 0 0 1 4 4V46a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-5.5a4 4 0 0 1 4-4Z" fill="#FF9800"/>
+                  <path d="M6 43h8M50 43h8" stroke="#7A3F00" strokeWidth="3" strokeLinecap="round"/>
+                  <circle cx="19" cy="49" r="6" fill="#1D2633"/>
+                  <circle cx="45" cy="49" r="6" fill="#1D2633"/>
+                  <circle cx="19" cy="49" r="2.2" fill="#FFB300"/>
+                  <circle cx="45" cy="49" r="2.2" fill="#FFB300"/>
+                  <circle cx="49" cy="17" r="8" fill="#18A66A"/>
+                  <path d="m45.5 17 2.3 2.3 5-5.3" stroke="white" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M52 25.5c2.6.7 4.5 3 4.5 5.8 0 1.5-.6 2.9-1.5 4l3 3" stroke="#7A3F00" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="56.7" cy="39.2" r="1.8" fill="#7A3F00"/>
+                </svg>
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[22px] font-bold leading-none">Sell your car free</span>
+                <span className="mt-0.5 block text-[14px] font-medium leading-[14px] text-yellow-950/80 md:mt-1.5 md:leading-tight">List your car in minutes and reach serious buyers.</span>
+              </span>
+            </span>
+            <span className="absolute right-5 top-1/2 flex h-11 w-11 -translate-y-1/2 flex-shrink-0 items-center justify-center rounded-full bg-white/25 text-yellow-950 transition-transform duration-300 group-hover:translate-x-1.5 md:right-6 md:h-12 md:w-12">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </span>
+          </Link>
+          <Link href="/cars"
+            className="group flex min-h-[62px] w-full items-center justify-center gap-3 rounded-[18px] border border-[#FF9800]/70 bg-[#08162D] px-6 py-4 text-sm font-bold text-white shadow-[0_14px_32px_rgba(0,0,0,0.22)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#FFB300] hover:bg-[#0B1E3D] hover:shadow-[0_18px_42px_rgba(0,0,0,0.28)] md:min-h-[68px] md:text-base">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/8 text-[#FFB300] ring-1 ring-[#FF9800]/35 transition-transform duration-300 group-hover:scale-105">
+              <svg aria-hidden="true" viewBox="0 0 64 64" className="h-8 w-8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 37h31l-3-8.5A6 6 0 0 0 31.4 25H20a6 6 0 0 0-5.5 3.6L9 37Z" fill="currentColor" opacity=".95"/>
+                <path d="M15 33.5 17 29a3 3 0 0 1 2.8-1.8h11.4a3 3 0 0 1 2.8 2l1.5 4.3H15Z" fill="#0B1E3D"/>
+                <path d="M7 36h36a3 3 0 0 1 3 3v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a3 3 0 0 1 2-3Z" fill="#FF9800"/>
+                <circle cx="15" cy="46" r="4.5" fill="#F8FAFC"/>
+                <circle cx="36" cy="46" r="4.5" fill="#F8FAFC"/>
+                <circle cx="15" cy="46" r="1.6" fill="#08162D"/>
+                <circle cx="36" cy="46" r="1.6" fill="#08162D"/>
+                <circle cx="44" cy="22" r="9" stroke="#F8FAFC" strokeWidth="3"/>
+                <path d="m50.5 28.5 7 7" stroke="#F8FAFC" strokeWidth="3" strokeLinecap="round"/>
+              </svg>
+            </span>
+            <span>Browse verified cars</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* Stats */}
       <section className="grid grid-cols-2 bg-navydark text-white md:grid-cols-4">
         {[
           { n:'5', l:'Cities covered' },

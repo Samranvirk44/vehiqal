@@ -139,13 +139,33 @@ export default function HomePage() {
           </div>
 
           {/* CTA buttons */}
-          <div className="mb-4 flex flex-wrap justify-center gap-2 md:mb-5 md:gap-3">
-            <Link href="/cars" className="btn-gold !px-6 !py-3 !text-sm">
-              Browse verified cars →
-            </Link>
+          <div className="mb-4 mx-auto flex w-full max-w-xl flex-col items-stretch gap-3 md:mb-5">
             <Link href="/sell"
-              className="rounded-lg border border-white/20 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-white/8 md:px-6">
-              Sell your car free
+              className="group flex min-h-[76px] w-full items-center justify-between gap-4 rounded-[16px] bg-[linear-gradient(135deg,#FF9800_0%,#FFB300_100%)] p-[20px_24px] text-left text-yellow-950 shadow-[0_18px_38px_rgba(255,152,0,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(255,152,0,0.38)]">
+              <span className="flex min-w-0 items-center gap-4">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-yellow-950 shadow-inner shadow-white/20">
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 17h14" />
+                    <path d="M6 17v-5l2.1-4.2A3 3 0 0 1 10.8 6h2.4a3 3 0 0 1 2.7 1.8L18 12v5" />
+                    <path d="M7 12h10" />
+                    <circle cx="7.5" cy="17" r="1.5" />
+                    <circle cx="16.5" cy="17" r="1.5" />
+                  </svg>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-[22px] font-bold leading-none">Sell your car free</span>
+                  <span className="mt-1 block text-[14px] font-medium leading-tight text-yellow-950/80">List your car in minutes and reach serious buyers.</span>
+                </span>
+              </span>
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/20 transition-transform duration-200 group-hover:translate-x-1">
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14" />
+                  <path d="m13 6 6 6-6 6" />
+                </svg>
+              </span>
+            </Link>
+            <Link href="/cars" className="flex w-full items-center justify-center rounded-[16px] border border-white/35 px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:border-white/60 hover:bg-white/8">
+              Browse verified cars
             </Link>
           </div>
 
